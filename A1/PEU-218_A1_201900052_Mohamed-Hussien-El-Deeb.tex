@@ -140,6 +140,12 @@ From the parametric equations of the line, we can get the direction vector of th
     \vec{x} = \pm \left\langle 1, 1, -1\right\rangle
 \]
 
+\begin{figure}[H]
+    \includegraphics[width=\linewidth]{Q3.png}\label{fig:Q3}
+    \caption{The unit vector that is orthogonal to the line and the vector
+        \(\hat{\dot{\imath}} - \hat{\dot{\jmath}}\).\cite{El-Deeb_PEU-218_Assignments_py}}
+\end{figure}
+
 \section{Question 4}
 
 \subsection{Problem}
@@ -150,6 +156,37 @@ and \(\vec{b} = 4 \hat{\dot{\imath}} + 5 \hat{\dot{\jmath}} + 6 \hat{k}\).
 Find the coordinates of the point at which the line intersects the plane \(2x + y + 3z = 6\).
 
 \subsection{Solution}
+
+Plane normal is
+
+\[
+    \vec{n} = \left\langle 2, 1, 3\right\rangle
+\]
+
+We can use point on the line that satisfies the plane equation and solve for \(\lambda \).
+
+\[
+    \vec{r} \cdot \vec{n} = \vec{a} \cdot \vec{n} + \lambda \vec{b} \cdot \vec{n}
+\]
+
+\[
+    = (1*2 + 2*1 + 3*3) + \lambda (4*2 + 5*1 + 6*3) = 13 + 31 \lambda = 6
+\]
+
+\[
+    \lambda = -\frac{7}{31}
+\]
+
+\[
+    \vec{r} = \vec{a} + \lambda \vec{b} = \left\langle 1, 2, 3\right\rangle - \frac{7}{31}\left\langle 4, 5, 6\right\rangle
+    = \left\langle \frac{3}{31}, \frac{22}{31}, \frac{48}{31}\right\rangle
+\]
+
+\begin{figure}[H]
+    \includegraphics[width=\linewidth]{Q4.png}\label{fig:Q4}
+    \caption{The point at which the line intersects the
+        plane.\cite{El-Deeb_PEU-218_Assignments_py}}
+\end{figure}
 
 \section{Question 5}
 
@@ -163,6 +200,45 @@ Starting with the vector quadruple product
 Show that \(\vec{D}\) can be expressed as a linear combination of \(\vec{A}, \vec{B}, \vec{C}\).
 
 \subsection{Solution}
+
+let \(
+\vec{V} = (\vec{A} \times \vec{B})
+\)
+
+\[
+    \therefore \vec{X} = \vec{V} \times (\vec{C} \times \vec{D})
+\]
+
+Using \([BAC - CAB]\) identity
+
+\[
+    \vec{V} \times (\vec{C} \times \vec{D})
+    = \vec{C}(\vec{V} \cdot \vec{D}) - \vec{D}(\vec{V} \cdot \vec{C})
+\]
+
+\[
+    \vec{X}
+    = \vec{C}(\vec{A} \times \vec{B} \cdot \vec{D})
+    - \vec{D}(\vec{A} \times \vec{B} \cdot \vec{C})
+\]
+
+Similarly we could express \(\vec{X}\) as a linear combination of \(\vec{A}\) and \(\vec{B}\) as
+
+\[
+    \vec{X}
+    = \vec{B}(\vec{C} \times \vec{D} \cdot \vec{A})
+    - \vec{A}(\vec{C} \times \vec{D} \cdot \vec{B})
+\]
+
+Equating the two expressions for \(\vec{X}\) we get
+
+\[
+    \vec{D}
+    = \frac{\vec{C}(\vec{A} \times \vec{B} \cdot \vec{D})
+    - \vec{B}(\vec{C} \times \vec{D} \cdot \vec{A})
+    + \vec{A}(\vec{C} \times \vec{D} \cdot \vec{B})}
+    {\vec{A} \times \vec{B} \cdot \vec{C}}
+\]
 
 \newpage
 \bibliographystyle{plain}
