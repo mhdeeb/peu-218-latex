@@ -197,10 +197,12 @@ and \(x = 3 - z\).
 
 \subsection{Solution}
 
-\[x = x, \quad y = 2\cos(\theta), \quad z = 2\sin(\theta)\]
+\[
+    x = x, \quad y = 2\cos(\theta), \quad z = 2\sin(\theta)
+\]
 
 \[
-    dS = \left\lVert \vec{r}_\theta \times \vec{r}_x \right\rVert d\theta dx
+    d\vec{S} = \frac{\partial \vec{r}}{\partial x} \times \frac{\partial \vec{r}}{\partial \theta}
 \]
 
 \[
@@ -208,16 +210,17 @@ and \(x = 3 - z\).
 \]
 
 \[
-    \vec{r}_x = \left\langle 1, 0, 0\right\rangle, \quad \vec{r}_\theta = 2 \left\langle 0, -\sin(\theta), \cos(\theta)\right\rangle
+    \frac{\partial \vec{r}}{\partial x} = \left\langle 1, 0, 0\right\rangle dx, \quad \frac{\partial \vec{r}}{\partial \theta} = 2 \left\langle 0, -\sin(\theta), \cos(\theta)\right\rangle d \theta
 \]
 
 \[
-    \vec{r}_\theta \times \vec{r}_x = 2 \left\langle 0, \cos(\theta), \sin(\theta)\right\rangle
-    , \quad \left\lVert \vec{r}_\theta \times \vec{r}_x \right\rVert = 2
+    \frac{\partial \vec{r}}{\partial x} \times \frac{\partial \vec{r}}{\partial \theta} = 2 \left\langle 0, \cos(\theta), \sin(\theta)\right\rangle d\theta dx
 \]
 
 \[
-    dS = 2 dx d\theta
+    dS
+    = \left\lVert \frac{\partial \vec{r}}{\partial x} \times \frac{\partial \vec{r}}{\partial \theta} \right\rVert
+    = 2 dx d\theta
 \]
 
 \[
@@ -249,7 +252,61 @@ Compute the heat flux across the surface \(x^2 + z^2 = 2, 0 \leq y \leq 2\), if 
 
 \subsection{Solution}
 
+The heat flux is given by \( -k \nabla T \).
 
+\[
+    - \iint_S \nabla T \cdot d\vec{S}
+\]
+
+\[
+    \nabla T
+    = \left\langle \frac{\partial T}{\partial x}, \frac{\partial T}{\partial y}, \frac{\partial T}{\partial z}\right\rangle
+\]
+
+\[
+    = 6 \left\langle x, 0, z\right\rangle
+\]
+
+\[
+    x = \sqrt{2} \cos(\theta), \quad y = y, \quad z = \sqrt{2} \sin(\theta)
+\]
+
+\[
+    d\vec{S}
+    = \frac{\partial \vec{r}}{\partial y} \times \frac{\partial \vec{r}}{\partial \theta}
+\]
+
+\[
+    \vec{r} = \left\langle \sqrt{2} \cos(\theta), y, \sqrt{2} \sin(\theta)\right\rangle
+\]
+
+\[
+    \frac{\partial \vec{r}}{\partial y}
+    = \left\langle 0, 1, 0\right\rangle dy, \quad \frac{\partial \vec{r}}{\partial \theta}
+    = \sqrt{2} \left\langle -\sin(\theta), 0, \cos(\theta)\right\rangle d\theta
+\]
+
+\[
+    d\vec{S}
+    = \frac{\partial \vec{r}}{\partial y} \times \frac{\partial \vec{r}}{\partial \theta}
+    = \sqrt{2} \left\langle \cos(\theta), 0, \sin(\theta)\right\rangle dy d\theta
+\]
+
+\[
+    \nabla T \cdot d\vec{S}
+    = 12 \left\langle \cos(\theta), 0, \sin(\theta)\right\rangle \cdot \left\langle \cos(\theta), 0, \sin(\theta)\right\rangle dy d\theta
+    = 12 dy d\theta
+\]
+
+\[
+    -\iint_S \nabla T \cdot d\vec{S}
+    = - 12 \int_{0}^{2\pi} \int_{0}^{2} dy d\theta
+    = - 48 \pi
+\]
+
+The negative sign indicates that the heat is flowing into the surface. This is because heat moves
+from higher temperature in this case outside since temperature increases as we get away radially
+from x and z origin to lower temperature inside the surface.
 
 \newpage
 \section{Question 6}
