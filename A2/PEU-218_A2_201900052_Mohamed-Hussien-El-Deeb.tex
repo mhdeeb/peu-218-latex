@@ -199,7 +199,44 @@ and \(x = 3 - z\).
 
 \[x = x, \quad y = 2\cos(\theta), \quad z = 2\sin(\theta)\]
 
+\[
+    dS = \left\lVert \vec{r}_\theta \times \vec{r}_x \right\rVert d\theta dx
+\]
 
+\[
+    \vec{r} = \left\langle x, 2 \cos(\theta), 2 \sin(\theta)\right\rangle
+\]
+
+\[
+    \vec{r}_x = \left\langle 1, 0, 0\right\rangle, \quad \vec{r}_\theta = 2 \left\langle 0, -\sin(\theta), \cos(\theta)\right\rangle
+\]
+
+\[
+    \vec{r}_\theta \times \vec{r}_x = 2 \left\langle 0, \cos(\theta), \sin(\theta)\right\rangle
+    , \quad \left\lVert \vec{r}_\theta \times \vec{r}_x \right\rVert = 2
+\]
+
+\[
+    dS = 2 dx d\theta
+\]
+
+\[
+    \iint_S 2y\ dS
+    = 8 \int_{0}^{2\pi} \int_{0}^{3 - 2 \sin(\theta)} \cos(\theta) dx d\theta
+\]
+
+\[
+    = 8 \int_{0}^{2\pi} \left[3 - 2 \sin(\theta)\right] \cos(\theta) d\theta
+\]
+
+\[
+    = 8 \int_{0}^{2\pi} \left[3 \cos(\theta) - 2 \sin(\theta) \cos(\theta)\right] d\theta
+\]
+
+\[
+    = 8 \left[3 \sin(\theta) + \cos^2(\theta)\right]_{0}^{2\pi}
+    = 0
+\]
 
 \newpage
 \section{Question 5}
