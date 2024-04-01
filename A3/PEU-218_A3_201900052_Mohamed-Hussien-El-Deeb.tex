@@ -36,7 +36,174 @@ Prove that \(\vec{b} \times(\vec{\nabla} \times \vec{b})=\vec{\nabla}\left(\frac
 
 \subsection{Solution}
 
+\[
+    \vec{\nabla} \times \vec{b}
+    =\left|
+    \begin{array}{ccc}
+        \hat{\dot{\imath}}          & \hat{\dot{\jmath}}          & \hat{k}                     \\
+        \frac{\partial}{\partial x} & \frac{\partial}{\partial y} & \frac{\partial}{\partial z} \\
+        b_{1}                       & b_{2}                       & b_{3}                       \\
+    \end{array}
+    \right|
+\]
 
+\[
+    = \hat{\dot{\imath}} \left(\frac{\partial}{\partial y} b_{3} - \frac{\partial}{\partial z} b_{2}\right)
+    + \hat{\dot{\jmath}} \left(\frac{\partial}{\partial z} b_{1} - \frac{\partial}{\partial x} b_{3}\right)
+    + \hat{k} \left(\frac{\partial}{\partial x} b_{2} - \frac{\partial}{\partial y} b_{1}\right)
+\]
+
+\[
+    \vec{b} \times \left(\vec{\nabla} \times \vec{b} \right)
+    = \left|
+    \begin{array}{ccc}
+        \hat{\dot{\imath}}                                                    & \hat{\dot{\jmath}}                                                    & \hat{k}                                                               \\
+        b_{1}                                                                 & b_{2}                                                                 & b_{3}                                                                 \\
+        \frac{\partial}{\partial y} b_{3} - \frac{\partial}{\partial z} b_{2} & \frac{\partial}{\partial z} b_{1} - \frac{\partial}{\partial x} b_{3} & \frac{\partial}{\partial x} b_{2} - \frac{\partial}{\partial y} b_{1} \\
+    \end{array}
+    \right|
+\]
+
+\[
+    = \hat{\dot{\imath}}
+    \left(
+    b_{2} \frac{\partial}{\partial x} b_{2}
+    - b_{2} \frac{\partial}{\partial y} b_{1}
+    - b_{3} \frac{\partial}{\partial z} b_{1}
+    + b_{3} \frac{\partial}{\partial x} b_{3}
+    \right)
+\]
+
+\[
+    + \hat{\dot{\jmath}}
+    \left(
+    b_{3} \frac{\partial}{\partial y} b_{3}
+    - b_{3} \frac{\partial}{\partial z} b_{2}
+    - b_{1} \frac{\partial}{\partial x} b_{2}
+    + b_{1} \frac{\partial}{\partial y} b_{1}
+    \right)
+\]
+
+\[
+    + \hat{k}
+    \left(
+    b_{1} \frac{\partial}{\partial z} b_{1}
+    - b_{1} \frac{\partial}{\partial x} b_{3}
+    - b_{2} \frac{\partial}{\partial y} b_{3}
+    + b_{2} \frac{\partial}{\partial z} b_{2}
+    \right)
+\]
+
+\[
+    = \hat{\dot{\imath}}
+    \left(
+    b_{1} \frac{\partial}{\partial x} b_{1}
+    + b_{2} \frac{\partial}{\partial x} b_{2}
+    + b_{3} \frac{\partial}{\partial x} b_{3}
+    - b_{1} \frac{\partial}{\partial x} b_{1}
+    - b_{2} \frac{\partial}{\partial y} b_{1}
+    - b_{3} \frac{\partial}{\partial z} b_{1}
+    \right)
+\]
+
+\[
+    + \hat{\dot{\jmath}}
+    \left(
+    b_{1} \frac{\partial}{\partial y} b_{1}
+    + b_{2} \frac{\partial}{\partial y} b_{2}
+    + b_{3} \frac{\partial}{\partial y} b_{3}
+    - b_{1} \frac{\partial}{\partial x} b_{2}
+    - b_{2} \frac{\partial}{\partial y} b_{2}
+    - b_{3} \frac{\partial}{\partial z} b_{2}
+    \right)
+\]
+
+\[
+    + \hat{k}
+    \left(
+    b_{1} \frac{\partial}{\partial z} b_{1}
+    + b_{2} \frac{\partial}{\partial z} b_{2}
+    + b_{3} \frac{\partial}{\partial z} b_{3}
+    - b_{1} \frac{\partial}{\partial x} b_{3}
+    - b_{2} \frac{\partial}{\partial y} b_{3}
+    - b_{3} \frac{\partial}{\partial z} b_{3}
+    \right)
+\]
+
+\[
+    = \hat{\dot{\imath}}
+    \left(
+    \underbrace{b_{1} \frac{\partial}{\partial x} b_{1}
+        + b_{2} \frac{\partial}{\partial x} b_{2}
+        + b_{3} \frac{\partial}{\partial x} b_{3}}
+    _{{\left(\vec{\nabla} \left(\frac{1}{2} b^2\right)\right)}_i}
+    - \overbrace{\left(b_{1} \frac{\partial}{\partial x} b_{1}
+        + b_{2} \frac{\partial}{\partial y} b_{1}
+        + b_{3} \frac{\partial}{\partial z} b_{1}\right)}
+    ^{(\vec{b} \cdot \vec{\nabla}) b_{1}}
+    \right)
+\]
+
+\[
+    + \hat{\dot{\jmath}}
+    \left(
+    \underbrace{b_{1} \frac{\partial}{\partial y} b_{1}
+        + b_{2} \frac{\partial}{\partial y} b_{2}
+        + b_{3} \frac{\partial}{\partial y} b_{3}}
+    _{{\left(\vec{\nabla} \left(\frac{1}{2} b^2\right)\right)}_j}
+    - \overbrace{\left(b_{1} \frac{\partial}{\partial x} b_{2}
+        + b_{2} \frac{\partial}{\partial y} b_{2}
+        + b_{3} \frac{\partial}{\partial z} b_{2}\right)}
+    ^{(\vec{b} \cdot \vec{\nabla}) b_{2}}
+    \right)
+\]
+
+\[
+    + \hat{k}
+    \left(
+    \underbrace{b_{1} \frac{\partial}{\partial z} b_{1}
+        + b_{2} \frac{\partial}{\partial z} b_{2}
+        + b_{3} \frac{\partial}{\partial z} b_{3}}
+    _{{\left(\vec{\nabla} \left(\frac{1}{2} b^2\right)\right)}_k}
+    - \overbrace{\left(b_{1} \frac{\partial}{\partial x} b_{3}
+        + b_{2} \frac{\partial}{\partial y} b_{3}
+        + b_{3} \frac{\partial}{\partial z} b_{3}\right)}
+    ^{(\vec{b} \cdot \vec{\nabla}) b_{3}}
+    \right)
+\]
+
+\[
+    =
+    \frac{1}{2}
+    \left(
+    \hat{\dot{\imath}}
+    \frac{\partial}{\partial x}
+    + \hat{\dot{\jmath}}
+    \frac{\partial}{\partial y}
+    + \hat{k}
+    \frac{\partial}{\partial z}
+    \right)
+    \left(
+    b_{1}^2+b_{2}^2+b_{3}^2
+    \right)
+\]
+
+\[
+    - \left(
+    b_{1} \frac{\partial}{\partial x}
+    + b_{2} \frac{\partial}{\partial y}
+    + b_{3} \frac{\partial}{\partial z}
+    \right)
+    \left(
+    b_{1} \hat{\dot{\imath}}
+    + b_{2} \hat{\dot{\jmath}}
+    + b_{3} \hat{k}
+    \right)
+\]
+
+\[
+    = \vec{\nabla} \left(\frac{1}{2} b^2\right) - (\vec{b} \cdot \vec{\nabla}) \vec{b}
+\]
 
 \newpage
 \section{Question 2}
