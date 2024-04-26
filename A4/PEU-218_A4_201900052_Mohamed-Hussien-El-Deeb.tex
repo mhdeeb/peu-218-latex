@@ -1,0 +1,326 @@
+\documentclass[12pt]{article}
+\usepackage[svgnames,x11names,table]{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage[thicklines]{cancel}
+
+\hypersetup{
+    colorlinks,
+    citecolor=blue,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=RoyalBlue4,
+}
+
+\title{PEU 218 Assignment 4}
+\author{Mohamed Hussien El-Deeb (201900052)}
+\date{\today}
+
+\DeclareMathOperator{\sech}{sech}
+\DeclareMathOperator{\csch}{csch}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\hypersetup{linkcolor=RoyalBlue4}
+
+\newpage
+\section{Question 1}
+
+\subsection{Problem}
+
+Paraboloidal coordinates \(u, v, \varphi \) are defined in terms of Cartesian coordinates
+
+\[
+    \begin{aligned}
+         & x=\alpha \beta \cos \varphi, \quad y=\alpha \beta \sin \varphi, \quad z=\frac{1}{2}\left(\alpha^2-\beta^2\right) \\
+         & \text { where } 0 \leq \alpha \leq \infty, \quad 0 \leq \beta \leq \infty, \quad 0 \leq \varphi \leq 2 \pi
+    \end{aligned}
+\]
+
+Prove that the \(\alpha \) -component of \(\vec{\nabla} \times \vec{A}\) is
+
+\[
+    \frac{1}{{\left(\alpha^2+\beta^2\right)}^{1 / 2}}\left(\frac{A_{\varphi}}{\beta}+\frac{\partial \varphi}{\partial \beta}\right)-\frac{1}{\alpha \beta} \frac{\partial A_\beta}{\partial \varphi}
+\]
+
+\subsection{Solution}
+
+\[
+    \vec{\nabla} \times \vec{A} = \frac{1}{h_1 h_2 h_3}\begin{vmatrix}
+        h_1 \hat{e}_1                 & h_2 \hat{e}_2                 & h_3 \hat{e}_3                 \\
+        \frac{\partial}{\partial q_1} & \frac{\partial}{\partial q_2} & \frac{\partial}{\partial q_3} \\
+        A_1 h_1                       & A_2 h_2                       & A_3 h_3
+    \end{vmatrix}
+\]
+
+\[
+    {(\vec{\nabla} \times \vec{A})}_\alpha =
+    \frac{1}{h_\beta h_\varphi}\left(\frac{\partial}{\partial \beta}\left(A_\varphi h_\varphi\right) - \frac{\partial}{\partial \varphi}\left(A_\beta h_\beta\right)\right)
+\]
+
+\[
+    = \frac{1}{h_\beta h_\varphi}\left(\frac{\partial A_\varphi}{\partial \beta} h_\varphi + \frac{\partial h_\varphi}{\partial \beta} A_\varphi - \frac{\partial A_\beta}{\partial \varphi} h_\beta - \frac{\partial h_\beta}{\partial \varphi} A_\beta\right)
+\]
+
+\[
+    h_\beta = \left\lvert \frac{\partial \vec{r}}{\partial \beta}\right\rvert
+    = \sqrt{
+    {\left(\frac{\partial x}{\partial \beta}\right)}^2
+    + {\left(\frac{\partial y}{\partial \beta}\right)}^2
+    + {\left(\frac{\partial z}{\partial \beta}\right)}^2
+    }
+\]
+
+\[
+    = \sqrt{
+    {\left(\alpha \cos \varphi\right)}^2
+    + {\left(\alpha \sin \varphi\right)}^2
+    + {\left(\beta\right)}^2
+    } = \sqrt{\alpha^2 + \beta^2}
+\]
+
+\[
+    h_\varphi = \left\lvert \frac{\partial \vec{r}}{\partial \varphi}\right\rvert
+    = \sqrt{
+    {\left(\frac{\partial x}{\partial \varphi}\right)}^2
+    + {\left(\frac{\partial y}{\partial \varphi}\right)}^2
+    + {\left(\frac{\partial z}{\partial \varphi}\right)}^2
+    }
+\]
+
+\[
+    = \sqrt{
+    {\left(\alpha \beta \sin \varphi\right)}^2
+    + {\left(\alpha \beta \cos \varphi\right)}^2
+    } = \alpha \beta
+\]
+
+\[
+    \frac{\partial h_\beta}{\partial \varphi}
+    = \frac{\partial}{\partial \varphi}\left(\sqrt{\alpha^2 + \beta^2}\right) = 0
+\]
+
+\[
+    \frac{\partial h_\varphi}{\partial \beta}
+    = \frac{\partial}{\partial \beta}\left(\alpha \beta\right) = \alpha
+\]
+
+\[
+    {(\vec{\nabla} \times \vec{A})}_\alpha =
+    \frac{1}{\alpha \beta \sqrt{\alpha^2 + \beta^2}}
+    \left(
+    \frac{\partial A_\varphi}{\partial \beta} \alpha \beta
+    + \alpha A_\varphi
+    - \frac{\partial A_\beta}{\partial \varphi} \sqrt{\alpha^2 + \beta^2}
+    \right)
+\]
+
+\[
+    = \frac{1}{{\left(\alpha^2+\beta^2\right)}^{1 / 2}}
+    \left(
+    \frac{A_{\varphi}}{\beta}
+    + \frac{\partial A_\varphi}{\partial \beta}
+    \right)-\frac{1}{\alpha \beta} \frac{\partial A_\beta}{\partial \varphi}
+\]
+
+\newpage
+\section{Question 2}
+
+\subsection{Problem}
+
+Using spherical coordinates, evaluate
+
+\[
+    \nabla^2\left(\vec{\nabla} \cdot \frac{\vec{r}}{r^2}\right)
+\]
+
+
+
+\subsection{Solution}
+
+\[
+    \vec{r} = \left\langle r, 0, 0 \right\rangle
+\]
+
+\[
+    \frac{\vec{r}}{r^2} =
+    \vec{r} = \left\langle \frac{1}{r}, 0, 0 \right\rangle
+\]
+
+\[
+    \vec{\nabla} \cdot \vec{u}=
+    \frac{1}{r^2} \frac{\partial\left(r^2 u_r\right)}{\partial r}+\frac{1}{r \sin \theta} \frac{\partial\left(\sin \theta u_\theta\right)}{\partial \theta}+\frac{1}{r \sin \theta} \frac{\partial\left(u_{\varphi}\right)}{\partial \varphi}
+\]
+
+\[
+    \vec{\nabla} \cdot \frac{\vec{r}}{r^2} =
+    \frac{1}{r^2} \frac{\partial r}{\partial r} = \frac{1}{r^2}
+\]
+
+\[
+    \nabla^2 f=\frac{1}{r^2} \frac{\partial}{\partial r}\left(r^2 \frac{\partial f}{\partial r}\right)+\frac{1}{r^2 \sin \theta} \frac{\partial}{\partial \theta}\left(\sin \theta \frac{\partial f}{\partial \theta}\right)+\frac{1}{r^2 \sin ^2 \theta} \frac{\partial^2 f}{\partial \varphi^2}
+\]
+
+\[
+    \nabla^2 \frac{1}{r^2} =
+    \frac{1}{r^2} \frac{\partial}{\partial r}\left(r^2 \frac{\partial \frac{1}{r^2}}{\partial r}\right) =
+    - \frac{2}{r^2} \frac{\partial}{\partial r}\left(r^{-1}\right) = \frac{2}{r^4}
+\]
+
+\[
+    \nabla^2\left(\vec{\nabla} \cdot \frac{\vec{r}}{r^2}\right) = \frac{2}{r^4}
+\]
+
+\newpage
+\section{Question 3}
+
+\subsection{Problem}
+
+We introduce the so-called spheroidal coordinates \((\eta, \theta, \varphi)\) by the following equations expressed in rectangular coordinates
+
+\[
+    \begin{gathered}
+        x=a \sinh \eta \sin \theta \cos \varphi, \\
+        y=a \sinh \eta \sin \theta \sin \varphi, \\
+        z=a \cosh \eta \cos \theta
+    \end{gathered}
+\]
+
+where \(0 \leq \eta \leq \infty, \quad 0 \leq \theta \leq \pi, \quad 0 \leq \varphi \leq 2 \pi \)
+
+a) Show that this coordinate system is orthogonal.
+
+b) Find the scale factors.
+
+c) Show that the function \(f(\eta, \theta, \varphi)=\ln \tanh \left(\frac{\eta}{2}\right)\) is a solution of Laplace's equation.
+
+\subsection{Solution}
+
+a)
+
+\[
+    \vec{r} = a \left\langle \sinh \eta \sin \theta \cos \varphi, \sinh \eta \sin \theta \sin \varphi, \cosh \eta \cos \theta \right\rangle
+\]
+
+\[
+    \vec{e}_\eta = \frac{\partial \vec{r}}{\partial \eta} = a \left\langle \cosh \eta \sin \theta \cos \varphi, \cosh \eta \sin \theta \sin \varphi, \sinh \eta \cos \theta \right\rangle
+\]
+
+\[
+    \vec{e}_\theta = \frac{\partial \vec{r}}{\partial \theta} = a \left\langle \sinh \eta \cos \theta \cos \varphi, \sinh \eta \cos \theta \sin \varphi, -\cosh \eta \sin \theta \right\rangle
+\]
+
+\[
+    \vec{e}_\varphi = \frac{\partial \vec{r}}{\partial \varphi} = a \left\langle -\sinh \eta \sin \theta \sin \varphi, \sinh \eta \sin \theta \cos \varphi, 0 \right\rangle
+\]
+
+\[
+    \frac{\partial \vec{r}}{\partial \eta} \cdot \frac{\partial \vec{r}}{\partial \theta} =
+    a^2 \left(\sinh \eta \cosh \eta \sin \theta \cos \theta - \sinh \eta \cosh \eta \sin \theta \cos \theta\right) = 0
+\]
+
+\[
+    \frac{\partial \vec{r}}{\partial \eta} \cdot \frac{\partial \vec{r}}{\partial \varphi} =
+\]
+
+\[
+    a^2 \left(-\sinh \eta \cosh \eta \sin \varphi \cos \varphi \sin^2 \theta + \sinh \eta \cosh \eta \sin \varphi \cos \varphi \sin^2 \theta\right) = 0
+\]
+
+\[
+    \frac{\partial \vec{r}}{\partial \theta} \cdot \frac{\partial \vec{r}}{\partial \varphi} =
+\]
+
+\[
+    a^2 \left(-\sinh^2 \eta \sin \theta \cos \theta \sin \varphi \cos \varphi + \sinh^2 \eta \sin \theta \cos \theta \sin \varphi \cos \varphi\right) = 0
+\]
+
+Since the dot product of different basis vectors is zero, the coordinate system is orthogonal.
+
+b)
+
+\[
+    \cosh^2 \eta = 1 + \sinh^2 \eta
+\]
+
+\[
+    h_\eta = \left\lvert \frac{\partial \vec{r}}{\partial \eta}\right\rvert
+    = a \sqrt{\cosh^2 \eta \sin^2 \theta + \sinh^2 \eta \cos^2 \theta}
+\]
+
+\[
+    = a \sqrt{(1 + \sinh^2 \eta) \sin^2 \theta + \sinh^2 \eta \cos^2 \theta}
+    = a \sqrt{\sinh^2 \eta + \sin^2 \theta}
+\]
+
+\[
+    h_\theta = \left\lvert \frac{\partial \vec{r}}{\partial \theta}\right\rvert
+    = a \sqrt{\sinh^2 \eta \cos^2 \theta + \cosh^2 \eta \sin^2 \theta} = h_\eta
+\]
+
+\[
+    h_\varphi = \left\lvert \frac{\partial \vec{r}}{\partial \varphi}\right\rvert
+    = a \sinh \eta \sin \theta
+\]
+
+c)
+
+\[
+    \nabla^2 f = \frac{1}{h_1 h_2 h_3}\left[\frac{\partial}{\partial q_1}\left(\frac{h_2 h_3}{h_1} \frac{\partial f}{\partial q_1}\right)+\frac{\partial}{\partial q_2}\left(\frac{h_3 h_1}{h_2} \frac{\partial f}{\partial q_2}\right)+\frac{\partial}{\partial q_3}\left(\frac{h_1 h_2}{h_3} \frac{\partial f}{\partial q_3}\right)\right]
+\]
+
+In this coordinate system, \(h_1 = h_2 = h_\eta, h_3 = h_\varphi \),
+
+\[
+    \nabla^2 f = \frac{1}{h_\eta^2 h_\varphi}\left[\frac{\partial}{\partial \eta}\left(h_\varphi \frac{\partial f}{\partial \eta}\right)+\frac{\partial}{\partial \theta}\left(h_\varphi \frac{\partial f}{\partial \theta}\right)+\frac{\partial}{\partial \varphi}\left(\frac{h_\eta^2}{h_\varphi} \frac{\partial f}{\partial \varphi}\right)\right]
+\]
+
+Since we are solving laplace equation, we need only to focus on what is inside the square brackets.
+
+\[
+    \frac{\partial}{\partial \eta}\left(h_\varphi \frac{\partial f}{\partial \eta}\right)
+    + \frac{\partial}{\partial \theta}\left(h_\varphi \frac{\partial f}{\partial \theta}\right)
+    + \frac{\partial}{\partial \varphi}\left(\frac{h_\eta^2}{h_\varphi} \frac{\partial f}{\partial \varphi}\right)
+\]
+
+Since f is a function of \(\eta \) only, we can take our solution to be a function of only \(\eta \) so second and third terms will be zero.
+
+\[
+    \frac{\partial}{\partial \eta}\left(h_\varphi \frac{\partial f}{\partial \eta}\right)
+\]
+
+We could also induce that,
+
+\[
+    h_\varphi \frac{\partial f}{\partial \eta} = g(\theta, \varphi)
+\]
+
+\[
+    \frac{\partial f}{\partial \eta}
+    = \frac{\partial}{\partial \eta}\left(\ln \tanh \left(\frac{\eta}{2}\right)\right)
+    = \frac{1}{2} \sech^2 \frac{\eta}{2} \coth \left(\frac{\eta}{2}\right)
+    = \frac{1}{2} \csch \frac{\eta}{2} \sech \frac{\eta}{2}
+\]
+
+\[
+    h_\varphi \frac{\partial f}{\partial \eta}
+    = a \sin \theta \sinh \eta \left(\frac{1}{2} \csch \frac{\eta}{2} \sech \frac{\eta}{2}\right)
+    = a \sin \theta \sinh \eta \csch \eta
+    = a \sin \theta
+\]
+
+Since g is not a function of \(\eta \), we could deduce that f is a solution of Laplace's equation.
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{references}
+\nocite{El-Deeb_PEU-218_Assignments}
+
+\end{document}
