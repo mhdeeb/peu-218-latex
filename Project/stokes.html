@@ -542,11 +542,6 @@
         line_tangent.clear();
         surface_field.clear();
         surface_normal.clear();
-        func(current_x_fn, current_y_fn, current_z_fn)(
-          settings.point_u,
-          settings.point_v,
-          surface_point.position
-        );
 
         i1 = integrateLine(edge.geometry, (line) => {
           const dr = line.end.clone().sub(line.start);
@@ -643,6 +638,11 @@
             func(current_x_fn, current_y_fn, current_z_fn),
             settings.points,
             settings.points
+          );
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
           );
           recalculate_geometry();
         },
@@ -786,12 +786,17 @@
         .listen()
         .onFinishChange(() => {
           try {
-            parametric_surface.geometry.dispose();
             fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry.dispose();
             parametric_surface.geometry = new ParametricGeometry(
               func(fn, current_y_fn, current_z_fn),
               settings.points,
               settings.points
+            );
+            func(fn, current_y_fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              surface_point.position
             );
             recalculate_geometry();
 
@@ -807,12 +812,17 @@
         .listen()
         .onFinishChange(() => {
           try {
-            parametric_surface.geometry.dispose();
             fn = Parser.parse(settings.y_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry.dispose();
             parametric_surface.geometry = new ParametricGeometry(
               func(current_x_fn, fn, current_z_fn),
               settings.points,
               settings.points
+            );
+            func(current_x_fn, fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              surface_point.position
             );
             recalculate_geometry();
 
@@ -828,12 +838,17 @@
         .listen()
         .onFinishChange(() => {
           try {
-            parametric_surface.geometry.dispose();
             fn = Parser.parse(settings.z_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry.dispose();
             parametric_surface.geometry = new ParametricGeometry(
               func(current_x_fn, current_y_fn, fn),
               settings.points,
               settings.points
+            );
+            func(current_x_fn, current_y_fn, fn)(
+              settings.point_u,
+              settings.point_v,
+              surface_point.position
             );
             recalculate_geometry();
 
@@ -1052,6 +1067,11 @@
             func(current_x_fn, current_y_fn, current_z_fn),
             settings.points,
             settings.points
+          );
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
           );
           recalculate_geometry();
         });
