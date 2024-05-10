@@ -543,45 +543,89 @@
       );
       scene.add(edge);
 
-      let i1 = integrateLine(edge.geometry, (line) => {
-        const dr = line.start.clone().sub(line.end);
-        const center = new THREE.Vector3();
-        line.getCenter(center);
-        const fn = field.evaluate(center);
-        fn.normalize();
-        fn.multiplyScalar(0.05);
-        drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-        const fd = dr.clone();
-        fd.normalize();
-        fd.multiplyScalar(0.05);
-        drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-        return field.evaluate(center).dot(dr);
-      });
+      function recalculate_field() {
+        line_field.clear();
+        line_tangent.clear();
+        surface_field.clear();
+        surface_normal.clear();
+        func(current_x_fn, current_y_fn, current_z_fn)(
+          0,
+          0,
+          surface_point.position
+        );
+        i1 = integrateLine(edge.geometry, (line) => {
+          const dr = line.start.clone().sub(line.end);
+          const center = new THREE.Vector3();
+          line.getCenter(center);
 
-      let i2 = integrateArea(parametric_surface_geometry, (face) => {
-        const normal = new THREE.Vector3();
-        const center = new THREE.Vector3();
-        face.getNormal(normal);
-        normal.multiplyScalar(-1);
-        face.getMidpoint(center);
-        const curl = field.curl(center);
-        const fn = curl.clone();
-        fn.normalize();
-        fn.multiplyScalar(0.05);
-        drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-        const fd = normal.clone();
-        fd.multiplyScalar(0.05);
-        drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-        return curl.dot(normal) * face.getArea();
-      });
+          const fn = field.evaluate(center);
+          fn.normalize();
+          fn.multiplyScalar(0.05);
+          drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
 
-      i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-      i2 = Math.round(i2 * 1000000000000) / 1000000000000;
+          const fd = dr.clone();
+          fd.normalize();
+          fd.multiplyScalar(0.05);
+          drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
 
-      // console.log("Vector Field: <z, x*y, -x*y>");
-      // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-      line_text.textContent = `Line Integral: ${i1}`;
-      surface_text.textContent = `Surface Integral: ${i2}`;
+          return -field.evaluate(center).dot(dr);
+        });
+
+        i2 = integrateArea(parametric_surface.geometry, (face) => {
+          const normal = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          face.getNormal(normal);
+          normal.multiplyScalar(-1);
+          face.getMidpoint(center);
+          const curl = field.curl(center);
+
+          const fn = field.evaluate(center);
+          fn.normalize();
+          fn.multiplyScalar(0.05);
+          drawArrow(center, fn, new THREE.Color(0xff0000), surface_field);
+
+          const fd = normal.clone();
+          fd.multiplyScalar(0.05);
+          drawArrow(center, fd, new THREE.Color(0xff00ff), surface_normal);
+
+          return -curl.dot(normal) * face.getArea();
+        });
+
+        i1 = Math.round(i1 * 10000) / 10000;
+        i2 = Math.round(i2 * 10000) / 10000;
+
+        line_text.textContent = `Line Integral: ${i1}`;
+        surface_text.textContent = `Surface Integral: ${i2}`;
+      }
+
+      function recalculate_geometry() {
+        parametric_surface.geometry.dispose();
+        fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
+        parametric_surface.geometry = new ParametricGeometry(
+          func(fn, current_y_fn, current_z_fn),
+          settings.points,
+          settings.points
+        );
+        parametric_surface.geometry.computeBoundingBox();
+        min = parametric_surface.geometry.boundingBox.min;
+        vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
+        parametric_surface2.geometry.dispose();
+        parametric_surface2.geometry = parametric_surface.geometry;
+
+        material.uniforms.min_point.value = min;
+        material.uniforms.volume.value = vol;
+
+        edge.geometry.dispose();
+        edge.geometry = new THREE.EdgesGeometry(
+          parametric_surface.geometry,
+          100
+        );
+
+        recalculate_field();
+      }
+
+      let i1;
+      let i2;
 
       // ========================= SETTINGS =======================
 
@@ -608,76 +652,7 @@
         reset_advanced: function () {
           settings.points = base_points;
 
-          parametric_surface.geometry.dispose();
-          parametric_surface.geometry = new ParametricGeometry(
-            func(current_x_fn, current_y_fn, current_z_fn),
-            settings.points,
-            settings.points
-          );
-          parametric_surface.geometry.computeBoundingBox();
-          min = parametric_surface.geometry.boundingBox.min;
-          vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
-          parametric_surface2.geometry.dispose();
-          parametric_surface2.geometry = parametric_surface.geometry;
-
-          material.uniforms.min_point.value = min;
-          material.uniforms.volume.value = vol;
-
-          edge.geometry.dispose();
-          edge.geometry = new THREE.EdgesGeometry(
-            parametric_surface.geometry,
-            100
-          );
-          line_field.clear();
-          line_tangent.clear();
-          surface_field.clear();
-          surface_normal.clear();
-          func(current_x_fn, current_y_fn, current_z_fn)(
-            0,
-            0,
-            surface_point.position
-          );
-          i1 = integrateLine(edge.geometry, (line) => {
-            const dr = line.start.clone().sub(line.end);
-            const center = new THREE.Vector3();
-            line.getCenter(center);
-            const fn = field.evaluate(center);
-            fn.normalize();
-            fn.multiplyScalar(0.05);
-            drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-            const fd = dr.clone();
-            fd.normalize();
-            fd.multiplyScalar(0.05);
-            drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-            return field.evaluate(center).dot(dr);
-          });
-
-          i2 = integrateArea(parametric_surface.geometry, (face) => {
-            const normal = new THREE.Vector3();
-            const center = new THREE.Vector3();
-            face.getNormal(normal);
-            normal.multiplyScalar(-1);
-            face.getMidpoint(center);
-            const curl = field.curl(center);
-            const fn = curl.clone();
-            fn.normalize();
-            fn.multiplyScalar(0.05);
-            drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-            const fd = normal.clone();
-            fd.multiplyScalar(0.05);
-            drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-            return curl.dot(normal) * face.getArea();
-          });
-
-          i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-          i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-          // console.log("Vector Field: <z, x*y, -x*y>");
-          // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-          line_text.textContent = `Line Integral: ${i1}`;
-          surface_text.textContent = `Surface Integral: ${i2}`;
+          recalculate_geometry();
         },
         animate: false,
         time: t_limit,
@@ -808,6 +783,9 @@
           input.click();
         },
       };
+
+      recalculate_geometry();
+
       const p1 = gui.addFolder("Parametric 1");
       const functions = p1.addFolder("Functions");
       functions
@@ -816,81 +794,7 @@
         .listen()
         .onFinishChange(() => {
           try {
-            parametric_surface.geometry.dispose();
-            fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
-            parametric_surface.geometry = new ParametricGeometry(
-              func(fn, current_y_fn, current_z_fn),
-              settings.points,
-              settings.points
-            );
-            parametric_surface.geometry.computeBoundingBox();
-            min = parametric_surface.geometry.boundingBox.min;
-            vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
-            parametric_surface2.geometry.dispose();
-            parametric_surface2.geometry = parametric_surface.geometry;
-
-            material.uniforms.min_point.value = min;
-            material.uniforms.volume.value = vol;
-
-            edge.geometry.dispose();
-            edge.geometry = new THREE.EdgesGeometry(
-              parametric_surface.geometry,
-              100
-            );
-
-            line_field.clear();
-            line_tangent.clear();
-            surface_field.clear();
-            surface_normal.clear();
-            func(current_x_fn, current_y_fn, current_z_fn)(
-              0,
-              0,
-              surface_point.position
-            );
-            i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.start.clone().sub(line.end);
-              const center = new THREE.Vector3();
-              line.getCenter(center);
-              const fn = field.evaluate(center);
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-              const fd = dr.clone();
-              fd.normalize();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-
-              return field.evaluate(center).dot(dr);
-            });
-
-            i2 = integrateArea(parametric_surface.geometry, (face) => {
-              const normal = new THREE.Vector3();
-              const center = new THREE.Vector3();
-              face.getNormal(normal);
-              normal.multiplyScalar(-1);
-              face.getMidpoint(center);
-              const curl = field.curl(center);
-
-              const fn = curl.clone();
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-              const fd = normal.clone();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-              return curl.dot(normal) * face.getArea();
-            });
-
-            i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-            i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-            // console.log("Vector Field: <z, x*y, -x*y>");
-            // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-            line_text.textContent = `Line Integral: ${i1}`;
-            surface_text.textContent = `Surface Integral: ${i2}`;
+            recalculate_geometry();
 
             current_x = settings.x_fn;
             current_x_fn = fn;
@@ -904,77 +808,7 @@
         .listen()
         .onFinishChange(() => {
           try {
-            parametric_surface.geometry.dispose();
-            fn = Parser.parse(settings.y_fn).toJSFunction(["u", "v"]);
-            parametric_surface.geometry = new ParametricGeometry(
-              func(current_x_fn, fn, current_z_fn),
-              settings.points,
-              settings.points
-            );
-            parametric_surface.geometry.computeBoundingBox();
-            min = parametric_surface.geometry.boundingBox.min;
-            vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
-            parametric_surface2.geometry.dispose();
-            parametric_surface2.geometry = parametric_surface.geometry;
-
-            material.uniforms.min_point.value = min;
-            material.uniforms.volume.value = vol;
-
-            edge.geometry.dispose();
-            edge.geometry = new THREE.EdgesGeometry(
-              parametric_surface.geometry,
-              100
-            );
-
-            line_field.clear();
-            line_tangent.clear();
-            surface_field.clear();
-            surface_normal.clear();
-            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
-            i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.start.clone().sub(line.end);
-              const center = new THREE.Vector3();
-              line.getCenter(center);
-
-              const fn = field.evaluate(center);
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-              const fd = dr.clone();
-              fd.normalize();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-              return field.evaluate(center).dot(dr);
-            });
-
-            i2 = integrateArea(parametric_surface.geometry, (face) => {
-              const normal = new THREE.Vector3();
-              const center = new THREE.Vector3();
-              face.getNormal(normal);
-              normal.multiplyScalar(-1);
-              face.getMidpoint(center);
-              const curl = field.curl(center);
-
-              const fn = curl.clone();
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-              const fd = normal.clone();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-              return curl.dot(normal) * face.getArea();
-            });
-
-            i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-            i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-            // console.log("Vector Field: <z, x*y, -x*y>");
-            // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-            line_text.textContent = `Line Integral: ${i1}`;
-            surface_text.textContent = `Surface Integral: ${i2}`;
+            recalculate_geometry();
 
             current_y = settings.y_fn;
             current_y_fn = fn;
@@ -988,78 +822,7 @@
         .listen()
         .onFinishChange(() => {
           try {
-            parametric_surface.geometry.dispose();
-            fn = Parser.parse(settings.z_fn).toJSFunction(["u", "v"]);
-            parametric_surface.geometry = new ParametricGeometry(
-              func(current_x_fn, current_y_fn, fn),
-              settings.points,
-              settings.points
-            );
-            parametric_surface.geometry.computeBoundingBox();
-            min = parametric_surface.geometry.boundingBox.min;
-            vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
-            parametric_surface2.geometry.dispose();
-            parametric_surface2.geometry = parametric_surface.geometry;
-
-            material.uniforms.min_point.value = min;
-            material.uniforms.volume.value = vol;
-
-            edge.geometry.dispose();
-            edge.geometry = new THREE.EdgesGeometry(
-              parametric_surface.geometry,
-              100
-            );
-
-            line_field.clear();
-            line_tangent.clear();
-            surface_field.clear();
-            surface_normal.clear();
-            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
-            i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.start.clone().sub(line.end);
-              const center = new THREE.Vector3();
-              line.getCenter(center);
-
-              const fn = field.evaluate(center);
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-              const fd = dr.clone();
-              fd.normalize();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-
-              return field.evaluate(center).dot(dr);
-            });
-
-            i2 = integrateArea(parametric_surface.geometry, (face) => {
-              const normal = new THREE.Vector3();
-              const center = new THREE.Vector3();
-              face.getNormal(normal);
-              normal.multiplyScalar(-1);
-              face.getMidpoint(center);
-              const curl = field.curl(center);
-
-              const fn = curl.clone();
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-              const fd = normal.clone();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-              return curl.dot(normal) * face.getArea();
-            });
-
-            i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-            i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-            // console.log("Vector Field: <z, x*y, -x*y>");
-            // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-            line_text.textContent = `Line Integral: ${i1}`;
-            surface_text.textContent = `Surface Integral: ${i2}`;
+            recalculate_geometry();
 
             current_z = settings.z_fn;
             current_z_fn = fn;
@@ -1077,56 +840,7 @@
             fn(0, 0, 0);
             field.fx = new ScalerField(fn, field.h);
 
-            line_field.clear();
-            line_tangent.clear();
-            surface_field.clear();
-            surface_normal.clear();
-            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
-            i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.start.clone().sub(line.end);
-              const center = new THREE.Vector3();
-              line.getCenter(center);
-
-              const fn = field.evaluate(center);
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-              const fd = dr.clone();
-              fd.normalize();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-
-              return field.evaluate(center).dot(dr);
-            });
-
-            i2 = integrateArea(parametric_surface.geometry, (face) => {
-              const normal = new THREE.Vector3();
-              const center = new THREE.Vector3();
-              face.getNormal(normal);
-              normal.multiplyScalar(-1);
-              face.getMidpoint(center);
-              const curl = field.curl(center);
-
-              const fn = curl.clone();
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-              const fd = normal.clone();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-              return curl.dot(normal) * face.getArea();
-            });
-
-            i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-            i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-            // console.log("Vector Field: <z, x*y, -x*y>");
-            // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-            line_text.textContent = `Line Integral: ${i1}`;
-            surface_text.textContent = `Surface Integral: ${i2}`;
+            recalculate_field();
 
             current_fx = settings.fx;
             current_fx_fn = fn;
@@ -1143,56 +857,7 @@
             fn = Parser.parse(settings.fy).toJSFunction(["x", "y", "z"]);
             field.fy = new ScalerField(fn, field.h);
 
-            line_field.clear();
-            line_tangent.clear();
-            surface_field.clear();
-            surface_normal.clear();
-            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
-            i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.start.clone().sub(line.end);
-              const center = new THREE.Vector3();
-              line.getCenter(center);
-
-              const fn = field.evaluate(center);
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-              const fd = dr.clone();
-              fd.normalize();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-
-              return field.evaluate(center).dot(dr);
-            });
-
-            i2 = integrateArea(parametric_surface.geometry, (face) => {
-              const normal = new THREE.Vector3();
-              const center = new THREE.Vector3();
-              face.getNormal(normal);
-              normal.multiplyScalar(-1);
-              face.getMidpoint(center);
-              const curl = field.curl(center);
-
-              const fn = curl.clone();
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-              const fd = normal.clone();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-              return curl.dot(normal) * face.getArea();
-            });
-
-            i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-            i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-            // console.log("Vector Field: <z, x*y, -x*y>");
-            // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-            line_text.textContent = `Line Integral: ${i1}`;
-            surface_text.textContent = `Surface Integral: ${i2}`;
+            recalculate_field();
 
             current_fy = settings.fy;
             current_fy_fn = fn;
@@ -1209,56 +874,7 @@
             fn = Parser.parse(settings.fz).toJSFunction(["x", "y", "z"]);
             field.fz = new ScalerField(fn, field.h);
 
-            line_field.clear();
-            line_tangent.clear();
-            surface_field.clear();
-            surface_normal.clear();
-            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
-            i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.start.clone().sub(line.end);
-              const center = new THREE.Vector3();
-              line.getCenter(center);
-
-              const fn = field.evaluate(center);
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-              const fd = dr.clone();
-              fd.normalize();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-
-              return field.evaluate(center).dot(dr);
-            });
-
-            i2 = integrateArea(parametric_surface.geometry, (face) => {
-              const normal = new THREE.Vector3();
-              const center = new THREE.Vector3();
-              face.getNormal(normal);
-              normal.multiplyScalar(-1);
-              face.getMidpoint(center);
-              const curl = field.curl(center);
-
-              const fn = curl.clone();
-              fn.normalize();
-              fn.multiplyScalar(0.05);
-              drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-              const fd = normal.clone();
-              fd.multiplyScalar(0.05);
-              drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-              return curl.dot(normal) * face.getArea();
-            });
-
-            i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-            i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-            // console.log("Vector Field: <z, x*y, -x*y>");
-            // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-            line_text.textContent = `Line Integral: ${i1}`;
-            surface_text.textContent = `Surface Integral: ${i2}`;
+            recalculate_field();
 
             current_fz = settings.fz;
             current_fz_fn = fn;
@@ -1418,74 +1034,7 @@
         .name("Points")
         .listen()
         .onFinishChange(() => {
-          parametric_surface.geometry.dispose();
-          parametric_surface.geometry = new ParametricGeometry(
-            func(current_x_fn, current_y_fn, current_z_fn),
-            settings.points,
-            settings.points
-          );
-          parametric_surface.geometry.computeBoundingBox();
-          min = parametric_surface.geometry.boundingBox.min;
-          vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
-          parametric_surface2.geometry.dispose();
-          parametric_surface2.geometry = parametric_surface.geometry;
-
-          edge.geometry.dispose();
-          edge.geometry = new THREE.EdgesGeometry(
-            parametric_surface.geometry,
-            100
-          );
-
-          line_field.clear();
-          line_tangent.clear();
-          surface_field.clear();
-          surface_normal.clear();
-          func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
-          i1 = integrateLine(edge.geometry, (line) => {
-            const dr = line.start.clone().sub(line.end);
-            const center = new THREE.Vector3();
-            line.getCenter(center);
-
-            const fn = field.evaluate(center);
-            fn.normalize();
-            fn.multiplyScalar(0.05);
-            drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
-
-            const fd = dr.clone();
-            fd.normalize();
-            fd.multiplyScalar(0.05);
-            drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
-
-            return field.evaluate(center).dot(dr);
-          });
-
-          i2 = integrateArea(parametric_surface.geometry, (face) => {
-            const normal = new THREE.Vector3();
-            const center = new THREE.Vector3();
-            face.getNormal(normal);
-            normal.multiplyScalar(-1);
-            face.getMidpoint(center);
-            const curl = field.curl(center);
-
-            const fn = curl.clone();
-            fn.normalize();
-            fn.multiplyScalar(0.05);
-            drawArrow(center, fn, new THREE.Color(0xff00ff), surface_field);
-
-            const fd = normal.clone();
-            fd.multiplyScalar(0.05);
-            drawArrow(center, fd, new THREE.Color(0xff0000), surface_normal);
-
-            return curl.dot(normal) * face.getArea();
-          });
-
-          i1 = Math.round(i1 * 1000000000000) / 1000000000000;
-          i2 = Math.round(i2 * 1000000000000) / 1000000000000;
-
-          // console.log("Vector Field: <z, x*y, -x*y>");
-          // console.log("Surface: y=x^2, x=[-1, 1], z=[-1, 1]");
-          line_text.textContent = `Line Integral: ${i1}`;
-          surface_text.textContent = `Surface Integral: ${i2}`;
+          recalculate_geometry();
         });
       advanced.add(settings, "reset_advanced").name("Reset");
       p1.add(settings, "delete_curve").name("Delete Curve (WIP)");
