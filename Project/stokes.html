@@ -389,6 +389,17 @@
         material
       );
 
+      let surface_point = new THREE.Mesh(
+        new THREE.SphereGeometry(0.02, 32, 32),
+        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+      );
+
+      func(current_x_fn, current_y_fn, current_z_fn)(
+        0,
+        0,
+        surface_point.position
+      );
+
       scene.add(parametric_surface);
       scene.add(parametric_surface2);
 
@@ -533,7 +544,7 @@
       scene.add(edge);
 
       let i1 = integrateLine(edge.geometry, (line) => {
-        const dr = line.end.clone().sub(line.start);
+        const dr = line.start.clone().sub(line.end);
         const center = new THREE.Vector3();
         line.getCenter(center);
         const fn = field.evaluate(center);
@@ -551,6 +562,7 @@
         const normal = new THREE.Vector3();
         const center = new THREE.Vector3();
         face.getNormal(normal);
+        normal.multiplyScalar(-1);
         face.getMidpoint(center);
         const curl = field.curl(center);
         const fn = curl.clone();
@@ -620,8 +632,13 @@
           line_tangent.clear();
           surface_field.clear();
           surface_normal.clear();
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            0,
+            0,
+            surface_point.position
+          );
           i1 = integrateLine(edge.geometry, (line) => {
-            const dr = line.end.clone().sub(line.start);
+            const dr = line.start.clone().sub(line.end);
             const center = new THREE.Vector3();
             line.getCenter(center);
             const fn = field.evaluate(center);
@@ -639,6 +656,7 @@
             const normal = new THREE.Vector3();
             const center = new THREE.Vector3();
             face.getNormal(normal);
+            normal.multiplyScalar(-1);
             face.getMidpoint(center);
             const curl = field.curl(center);
             const fn = curl.clone();
@@ -678,6 +696,9 @@
         surface_field: true,
         line_tangent: true,
         line_field: true,
+        surface_point: false,
+        point_u: 0,
+        point_v: 0,
         background: "#000000",
         background_opacity: 1,
         toggle_grid: false,
@@ -821,9 +842,13 @@
             line_tangent.clear();
             surface_field.clear();
             surface_normal.clear();
-
+            func(current_x_fn, current_y_fn, current_z_fn)(
+              0,
+              0,
+              surface_point.position
+            );
             i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.end.clone().sub(line.start);
+              const dr = line.start.clone().sub(line.end);
               const center = new THREE.Vector3();
               line.getCenter(center);
               const fn = field.evaluate(center);
@@ -843,6 +868,7 @@
               const normal = new THREE.Vector3();
               const center = new THREE.Vector3();
               face.getNormal(normal);
+              normal.multiplyScalar(-1);
               face.getMidpoint(center);
               const curl = field.curl(center);
 
@@ -904,9 +930,9 @@
             line_tangent.clear();
             surface_field.clear();
             surface_normal.clear();
-
+            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
             i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.end.clone().sub(line.start);
+              const dr = line.start.clone().sub(line.end);
               const center = new THREE.Vector3();
               line.getCenter(center);
 
@@ -926,6 +952,7 @@
               const normal = new THREE.Vector3();
               const center = new THREE.Vector3();
               face.getNormal(normal);
+              normal.multiplyScalar(-1);
               face.getMidpoint(center);
               const curl = field.curl(center);
 
@@ -987,9 +1014,9 @@
             line_tangent.clear();
             surface_field.clear();
             surface_normal.clear();
-
+            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
             i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.end.clone().sub(line.start);
+              const dr = line.start.clone().sub(line.end);
               const center = new THREE.Vector3();
               line.getCenter(center);
 
@@ -1010,6 +1037,7 @@
               const normal = new THREE.Vector3();
               const center = new THREE.Vector3();
               face.getNormal(normal);
+              normal.multiplyScalar(-1);
               face.getMidpoint(center);
               const curl = field.curl(center);
 
@@ -1053,9 +1081,9 @@
             line_tangent.clear();
             surface_field.clear();
             surface_normal.clear();
-
+            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
             i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.end.clone().sub(line.start);
+              const dr = line.start.clone().sub(line.end);
               const center = new THREE.Vector3();
               line.getCenter(center);
 
@@ -1076,6 +1104,7 @@
               const normal = new THREE.Vector3();
               const center = new THREE.Vector3();
               face.getNormal(normal);
+              normal.multiplyScalar(-1);
               face.getMidpoint(center);
               const curl = field.curl(center);
 
@@ -1118,9 +1147,9 @@
             line_tangent.clear();
             surface_field.clear();
             surface_normal.clear();
-
+            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
             i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.end.clone().sub(line.start);
+              const dr = line.start.clone().sub(line.end);
               const center = new THREE.Vector3();
               line.getCenter(center);
 
@@ -1141,6 +1170,7 @@
               const normal = new THREE.Vector3();
               const center = new THREE.Vector3();
               face.getNormal(normal);
+              normal.multiplyScalar(-1);
               face.getMidpoint(center);
               const curl = field.curl(center);
 
@@ -1183,9 +1213,9 @@
             line_tangent.clear();
             surface_field.clear();
             surface_normal.clear();
-
+            func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
             i1 = integrateLine(edge.geometry, (line) => {
-              const dr = line.end.clone().sub(line.start);
+              const dr = line.start.clone().sub(line.end);
               const center = new THREE.Vector3();
               line.getCenter(center);
 
@@ -1206,6 +1236,7 @@
               const normal = new THREE.Vector3();
               const center = new THREE.Vector3();
               face.getNormal(normal);
+              normal.multiplyScalar(-1);
               face.getMidpoint(center);
               const curl = field.curl(center);
 
@@ -1409,9 +1440,9 @@
           line_tangent.clear();
           surface_field.clear();
           surface_normal.clear();
-
+          func(current_x_fn, current_y_fn, current_z_fn)(0, 0, surface_point.position);
           i1 = integrateLine(edge.geometry, (line) => {
-            const dr = line.end.clone().sub(line.start);
+            const dr = line.start.clone().sub(line.end);
             const center = new THREE.Vector3();
             line.getCenter(center);
 
@@ -1432,6 +1463,7 @@
             const normal = new THREE.Vector3();
             const center = new THREE.Vector3();
             face.getNormal(normal);
+            normal.multiplyScalar(-1);
             face.getMidpoint(center);
             const curl = field.curl(center);
 
@@ -1585,6 +1617,36 @@
           } else {
             scene.remove(line_field);
           }
+        });
+      general
+        .add(settings, "surface_point")
+        .name("Surface Point")
+        .onChange((value) => {
+          if (value) {
+            scene.add(surface_point);
+          } else {
+            scene.remove(surface_point);
+          }
+        });
+      general
+        .add(settings, "point_u", 0, 1, 0.01)
+        .name("U")
+        .onChange(() => {
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
+          );
+        });
+      general
+        .add(settings, "point_v", 0, 1, 0.01)
+        .name("V")
+        .onChange(() => {
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
+          );
         });
       general.add(settings, "add_curve").name("Add Curve (WIP)");
       general.add(settings, "reset_camera").name("Reset Camera");
