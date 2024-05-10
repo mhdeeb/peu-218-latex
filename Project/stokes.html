@@ -394,12 +394,6 @@
         new THREE.MeshBasicMaterial({ color: 0xff0000 })
       );
 
-      func(current_x_fn, current_y_fn, current_z_fn)(
-        0,
-        0,
-        surface_point.position
-      );
-
       scene.add(parametric_surface);
       scene.add(parametric_surface2);
 
@@ -549,12 +543,13 @@
         surface_field.clear();
         surface_normal.clear();
         func(current_x_fn, current_y_fn, current_z_fn)(
-          0,
-          0,
+          settings.point_u,
+          settings.point_v,
           surface_point.position
         );
+
         i1 = integrateLine(edge.geometry, (line) => {
-          const dr = line.start.clone().sub(line.end);
+          const dr = line.end.clone().sub(line.start);
           const center = new THREE.Vector3();
           line.getCenter(center);
 
@@ -568,14 +563,13 @@
           fd.multiplyScalar(0.05);
           drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
 
-          return -field.evaluate(center).dot(dr);
+          return field.evaluate(center).dot(dr);
         });
 
         i2 = integrateArea(parametric_surface.geometry, (face) => {
           const normal = new THREE.Vector3();
           const center = new THREE.Vector3();
           face.getNormal(normal);
-          normal.multiplyScalar(-1);
           face.getMidpoint(center);
           const curl = field.curl(center);
 
@@ -588,7 +582,7 @@
           fd.multiplyScalar(0.05);
           drawArrow(center, fd, new THREE.Color(0xff00ff), surface_normal);
 
-          return -curl.dot(normal) * face.getArea();
+          return curl.dot(normal) * face.getArea();
         });
 
         i1 = Math.round(i1 * 10000) / 10000;
@@ -599,13 +593,6 @@
       }
 
       function recalculate_geometry() {
-        parametric_surface.geometry.dispose();
-        fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
-        parametric_surface.geometry = new ParametricGeometry(
-          func(fn, current_y_fn, current_z_fn),
-          settings.points,
-          settings.points
-        );
         parametric_surface.geometry.computeBoundingBox();
         min = parametric_surface.geometry.boundingBox.min;
         vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
@@ -651,7 +638,12 @@
         points: base_points,
         reset_advanced: function () {
           settings.points = base_points;
-
+          parametric_surface.geometry.dispose();
+          parametric_surface.geometry = new ParametricGeometry(
+            func(current_x_fn, current_y_fn, current_z_fn),
+            settings.points,
+            settings.points
+          );
           recalculate_geometry();
         },
         animate: false,
@@ -794,6 +786,13 @@
         .listen()
         .onFinishChange(() => {
           try {
+            parametric_surface.geometry.dispose();
+            fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry = new ParametricGeometry(
+              func(fn, current_y_fn, current_z_fn),
+              settings.points,
+              settings.points
+            );
             recalculate_geometry();
 
             current_x = settings.x_fn;
@@ -808,6 +807,13 @@
         .listen()
         .onFinishChange(() => {
           try {
+            parametric_surface.geometry.dispose();
+            fn = Parser.parse(settings.y_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry = new ParametricGeometry(
+              func(current_x_fn, fn, current_z_fn),
+              settings.points,
+              settings.points
+            );
             recalculate_geometry();
 
             current_y = settings.y_fn;
@@ -822,6 +828,13 @@
         .listen()
         .onFinishChange(() => {
           try {
+            parametric_surface.geometry.dispose();
+            fn = Parser.parse(settings.z_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry = new ParametricGeometry(
+              func(current_x_fn, current_y_fn, fn),
+              settings.points,
+              settings.points
+            );
             recalculate_geometry();
 
             current_z = settings.z_fn;
@@ -1034,6 +1047,12 @@
         .name("Points")
         .listen()
         .onFinishChange(() => {
+          parametric_surface.geometry.dispose();
+          parametric_surface.geometry = new ParametricGeometry(
+            func(current_x_fn, current_y_fn, current_z_fn),
+            settings.points,
+            settings.points
+          );
           recalculate_geometry();
         });
       advanced.add(settings, "reset_advanced").name("Reset");
