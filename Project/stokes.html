@@ -97,17 +97,17 @@
 
       const loadingManager = new THREE.LoadingManager();
 
-      loadingManager.onLoad = function () {
+      loadingManager.onLoad = () => {
         document.querySelector(".progress-bar-container").style.display =
           "none";
       };
 
-      loadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
+      loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
         progressBar.value = (itemsLoaded / itemsTotal) * 100;
         progressLabel.textContent = `Loaded ${itemsLoaded} of ${itemsTotal} files.`;
       };
 
-      loadingManager.onError = function (url) {
+      loadingManager.onError = (url) => {
         console.log("There was an error loading " + url);
       };
 
@@ -223,7 +223,7 @@
       gridHelper_y.visible = false;
       gridHelper_z.visible = false;
 
-      window.addEventListener("keydown", function (event) {
+      window.addEventListener("keydown", (event) => {
         switch (event.code) {
           case "KeyT":
             grid_toggle.setValue(!grid_toggle.getValue());
@@ -311,13 +311,155 @@
              `;
       }
 
-      function func(x, y, z) {
+      function surface(x, y, z) {
         return (u, v, target) => {
           let X = x(u, v);
           let Y = y(u, v);
           let Z = z(u, v);
           target.set(X, Y, Z);
         };
+      }
+
+      function pathIntegral(curve_geometry, fn) {
+        const positionAttribute = curve_geometry.getAttribute("position");
+
+        let sum = 0;
+
+        for (let i = 0; i < positionAttribute.count; i += 2) {
+          const va = new THREE.Vector3();
+          const vb = new THREE.Vector3();
+
+          va.fromBufferAttribute(positionAttribute, i);
+          vb.fromBufferAttribute(positionAttribute, i + 1);
+
+          const line = new THREE.Line3(va, vb);
+
+          sum += fn(line);
+        }
+
+        return sum;
+      }
+
+      function surfaceIntegral(surface_geometry, fn) {
+        const positionAttribute = surface_geometry.getAttribute("position");
+        const indexAttribute = surface_geometry.getIndex();
+
+        let sum = 0;
+
+        for (let i = 0; i < indexAttribute.count; i += 3) {
+          const a = indexAttribute.getX(i);
+          const b = indexAttribute.getX(i + 1);
+          const c = indexAttribute.getX(i + 2);
+
+          const va = new THREE.Vector3();
+          const vb = new THREE.Vector3();
+          const vc = new THREE.Vector3();
+
+          va.fromBufferAttribute(positionAttribute, a);
+          vb.fromBufferAttribute(positionAttribute, b);
+          vc.fromBufferAttribute(positionAttribute, c);
+
+          const face = new THREE.Triangle(va, vb, vc);
+
+          sum += fn(face);
+        }
+
+        return sum;
+      }
+
+      function drawArrow(origin, vector, color, object) {
+        const len = vector.length();
+        const dir = vector.clone().normalize();
+        const pos = origin.clone().add(vector.clone().multiplyScalar(-0.5));
+        const arrow = new THREE.ArrowHelper(dir, pos, len, color, 0.01, 0.01);
+        object.add(arrow);
+      }
+
+      function modifyArrow(arrow, { pos, vec, color }) {
+        if (color) arrow.setColor(color);
+        if (pos) arrow.position.copy(pos);
+        if (vec) {
+          const v = vec.clone();
+          v.normalize();
+          arrow.setLength(vec.length());
+          arrow.setDirection(v);
+        }
+      }
+
+      class ScalerField {
+        constructor(f, delta = 0.0001) {
+          this.f = f;
+          this.delta = delta;
+        }
+
+        evaluate(point) {
+          return this.f(point.x, point.y, point.z);
+        }
+
+        partialX(point) {
+          return (
+            (this.f(point.x + this.delta, point.y, point.z) -
+              this.f(point.x - this.delta, point.y, point.z)) /
+            (2 * this.delta)
+          );
+        }
+
+        partialY(point) {
+          return (
+            (this.f(point.x, point.y + this.delta, point.z) -
+              this.f(point.x, point.y - this.delta, point.z)) /
+            (2 * this.delta)
+          );
+        }
+
+        partialZ(point) {
+          return (
+            (this.f(point.x, point.y, point.z + this.delta) -
+              this.f(point.x, point.y, point.z - this.delta)) /
+            (2 * this.delta)
+          );
+        }
+
+        gradient(point) {
+          return new THREE.Vector3(
+            this.partialX(point),
+            this.partialY(point),
+            this.partialZ(point)
+          );
+        }
+      }
+
+      class VectorField {
+        constructor({ fx, fy, fz, delta = 0.0001 }) {
+          this.fx = new ScalerField(fx, delta);
+          this.fy = new ScalerField(fy, delta);
+          this.fz = new ScalerField(fz, delta);
+          this.delta = delta;
+        }
+
+        evaluate(point) {
+          return new THREE.Vector3(
+            this.fx.evaluate(point),
+            this.fy.evaluate(point),
+            this.fz.evaluate(point)
+          );
+        }
+
+        divergence(point) {
+          return (
+            this.fx.partialX(point) +
+            this.fy.partialY(point) +
+            this.fz.partialZ(point)
+          );
+        }
+
+        curl(point) {
+          const dx = this.fx.gradient(point);
+          const dy = this.fy.gradient(point);
+          const dz = this.fz.gradient(point);
+
+          return new THREE.Vector3(dz.y - dy.z, dx.z - dz.x, dy.x - dx.y);
+        }
       }
 
       var current_x = "sin(PI*u/2)*cos(2*PI*v)";
@@ -348,7 +490,7 @@
       ]);
 
       let parametric_surface_geometry = new ParametricGeometry(
-        func(current_x_fn, current_y_fn, current_z_fn),
+        surface(current_x_fn, current_y_fn, current_z_fn),
         base_points,
         base_points
       );
@@ -389,123 +531,10 @@
         material
       );
 
-      let surface_point = new THREE.Mesh(
-        new THREE.SphereGeometry(0.02, 32, 32),
-        new THREE.MeshBasicMaterial({ color: 0xff0000 })
-      );
+      let surface_vector = new THREE.ArrowHelper();
 
       scene.add(parametric_surface);
       scene.add(parametric_surface2);
-
-      function integrateLine(geometry, fn) {
-        const positionAttribute = geometry.getAttribute("position");
-
-        let sum = 0;
-
-        for (let i = 0; i < positionAttribute.count; i += 2) {
-          const va = new THREE.Vector3();
-          const vb = new THREE.Vector3();
-
-          va.fromBufferAttribute(positionAttribute, i);
-          vb.fromBufferAttribute(positionAttribute, i + 1);
-
-          const line = new THREE.Line3(va, vb);
-
-          sum += fn(line);
-        }
-
-        return sum;
-      }
-
-      function integrateArea(geometry, fn) {
-        const positionAttribute = geometry.getAttribute("position");
-        const indexAttribute = geometry.getIndex();
-
-        let sum = 0;
-
-        for (let i = 0; i < indexAttribute.count; i += 3) {
-          const a = indexAttribute.getX(i);
-          const b = indexAttribute.getX(i + 1);
-          const c = indexAttribute.getX(i + 2);
-
-          const va = new THREE.Vector3();
-          const vb = new THREE.Vector3();
-          const vc = new THREE.Vector3();
-
-          va.fromBufferAttribute(positionAttribute, a);
-          vb.fromBufferAttribute(positionAttribute, b);
-          vc.fromBufferAttribute(positionAttribute, c);
-
-          const face = new THREE.Triangle(va, vb, vc);
-
-          sum += fn(face);
-        }
-
-        return sum;
-      }
-
-      class ScalerField {
-        constructor(f, h = 0.0001) {
-          this.f = f;
-          this.h = h;
-        }
-
-        evaluate(point) {
-          return this.f(point.x, point.y, point.z);
-        }
-
-        grad(point) {
-          const dx =
-            (this.f(point.x + this.h, point.y, point.z) -
-              this.f(point.x - this.h, point.y, point.z)) /
-            (2 * this.h);
-
-          const dy =
-            (this.f(point.x, point.y + this.h, point.z) -
-              this.f(point.x, point.y - this.h, point.z)) /
-            (2 * this.h);
-
-          const dz =
-            (this.f(point.x, point.y, point.z + this.h) -
-              this.f(point.x, point.y, point.z - this.h)) /
-            (2 * this.h);
-
-          return new THREE.Vector3(dx, dy, dz);
-        }
-      }
-
-      class VectorField {
-        constructor({ fx, fy, fz, h = 0.0001 }) {
-          this.fx = new ScalerField(fx, h);
-          this.fy = new ScalerField(fy, h);
-          this.fz = new ScalerField(fz, h);
-          this.h = h;
-        }
-
-        evaluate(point) {
-          return new THREE.Vector3(
-            this.fx.evaluate(point),
-            this.fy.evaluate(point),
-            this.fz.evaluate(point)
-          );
-        }
-
-        divergence(point) {
-          const dx = this.fx.grad(point).x;
-          const dy = this.fy.grad(point).y;
-          const dz = this.fz.grad(point).z;
-
-          return dx + dy + dz;
-        }
-
-        curl(point) {
-          const dx = this.fx.grad(point);
-          const dy = this.fy.grad(point);
-          const dz = this.fz.grad(point);
-
-          return new THREE.Vector3(dz.y - dy.z, dx.z - dz.x, dy.x - dx.y);
-        }
-      }
 
       const line_field = new THREE.Group();
       const line_tangent = new THREE.Group();
@@ -515,15 +544,6 @@
       scene.add(line_field);
       scene.add(line_tangent);
       scene.add(surface_field);
-      // scene.add(surface_normal);
-
-      function drawArrow(origin, vector, color, object) {
-        const len = vector.length();
-        const dir = vector.clone().normalize();
-        const pos = origin.clone().add(vector.clone().multiplyScalar(-0.5));
-        const arrow = new THREE.ArrowHelper(dir, pos, len, color, 0.01, 0.01);
-        object.add(arrow);
-      }
 
       var field = new VectorField({
         fx: current_fx_fn,
@@ -537,13 +557,13 @@
       );
       scene.add(edge);
 
-      function recalculate_field() {
+      const recomputeField = () => {
         line_field.clear();
         line_tangent.clear();
         surface_field.clear();
         surface_normal.clear();
 
-        i1 = integrateLine(edge.geometry, (line) => {
+        i1 = pathIntegral(edge.geometry, (line) => {
           const dr = line.end.clone().sub(line.start);
           const center = new THREE.Vector3();
           line.getCenter(center);
@@ -561,7 +581,7 @@
           return field.evaluate(center).dot(dr);
         });
 
-        i2 = integrateArea(parametric_surface.geometry, (face) => {
+        i2 = surfaceIntegral(parametric_surface.geometry, (face) => {
           const normal = new THREE.Vector3();
           const center = new THREE.Vector3();
           face.getNormal(normal);
@@ -585,9 +605,9 @@
 
         line_text.textContent = `Line Integral: ${i1}`;
         surface_text.textContent = `Surface Integral: ${i2}`;
-      }
+      };
 
-      function recalculate_geometry() {
+      const recomputeGeometry = () => {
         parametric_surface.geometry.computeBoundingBox();
         min = parametric_surface.geometry.boundingBox.min;
         vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
@@ -603,8 +623,8 @@
           100
         );
 
-        recalculate_field();
-      }
+        recomputeField();
+      };
 
       let i1;
       let i2;
@@ -615,6 +635,7 @@
 
       const color_type = ["rgb", "hsv", "solid"];
       const export_ext = ["png", "webp", "jpg", "gif", "json"];
+      const point_types = ["normal", "field", "position"];
 
       let settings = {
         x_fn: current_x,
@@ -631,27 +652,34 @@
         a: a_string,
         solid_color: "#00ff00",
         points: base_points,
-        reset_advanced: function () {
+        reset_advanced: () => {
           settings.points = base_points;
           parametric_surface.geometry.dispose();
           parametric_surface.geometry = new ParametricGeometry(
-            func(current_x_fn, current_y_fn, current_z_fn),
+            surface(current_x_fn, current_y_fn, current_z_fn),
             settings.points,
             settings.points
           );
-          func(current_x_fn, current_y_fn, current_z_fn)(
-            settings.point_u,
-            settings.point_v,
-            surface_point.position
-          );
-          recalculate_geometry();
+          const pos = new THREE.Vector3();
+          const vec = new THREE.Vector3();
+          if (settings.point_type !== point_types[2])
+            surface(current_x_fn, current_y_fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              pos
+            );
+          modifyArrow(surface_vector, {
+            pos,
+            vec: field.evaluate(pos),
+          });
+          recomputeGeometry();
         },
         animate: false,
         time: t_limit,
         t_min: 0,
         t_max: t_limit,
         speed_multiplier: 0.05,
-        reset: function () {
+        reset: () => {
           settings.animate = false;
           settings.time = settings.t_max;
           settings.speed_multiplier = 0.05;
@@ -663,7 +691,8 @@
         surface_field: true,
         line_tangent: true,
         line_field: true,
-        surface_point: false,
+        surface_vector: false,
+        point_type: point_types[1],
         point_u: 0,
         point_v: 0,
         background: "#000000",
@@ -673,13 +702,11 @@
         x_grid: true,
         y_grid: true,
         z_grid: true,
-        delete_curve: function () {},
-        reset_camera: function () {
-          controls.reset();
-        },
-        add_curve: function () {},
+        delete_curve: () => {},
+        reset_camera: controls.reset,
+        add_curve: () => {},
         export_ext: export_ext[0],
-        export: function () {
+        export: () => {
           if (settings.export_ext === export_ext[0]) {
             renderer.domElement.toBlob((blob) => {
               const url = URL.createObjectURL(blob);
@@ -744,7 +771,7 @@
             URL.revokeObjectURL(url);
           }
         },
-        record: function () {
+        record: () => {
           if (recording) {
             record_button.name("Record");
             export_button.enable();
@@ -759,7 +786,7 @@
 
           recording = !recording;
         },
-        load_graph: function () {
+        load_graph: () => {
           const input = document.createElement("input");
           input.type = "file";
           input.accept = ".json";
@@ -776,29 +803,35 @@
         },
       };
 
-      recalculate_geometry();
+      recomputeGeometry();
 
       const p1 = gui.addFolder("Parametric 1");
       const functions = p1.addFolder("Functions");
       functions
         .add(settings, "x_fn")
-        .name("x(u, v)")
+        .name("surface_x(u, v)")
         .listen()
         .onFinishChange(() => {
           try {
             fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
             parametric_surface.geometry.dispose();
             parametric_surface.geometry = new ParametricGeometry(
-              func(fn, current_y_fn, current_z_fn),
+              surface(fn, current_y_fn, current_z_fn),
               settings.points,
               settings.points
             );
-            func(fn, current_y_fn, current_z_fn)(
-              settings.point_u,
-              settings.point_v,
-              surface_point.position
-            );
-            recalculate_geometry();
+            const pos = new THREE.Vector3();
+            if (settings.point_type !== point_types[2])
+              surface(fn, current_y_fn, current_z_fn)(
+                settings.point_u,
+                settings.point_v,
+                pos
+              );
+            modifyArrow(surface_vector, {
+              pos,
+              vec: field.evaluate(pos),
+            });
+            recomputeGeometry();
 
             current_x = settings.x_fn;
             current_x_fn = fn;
@@ -808,23 +841,29 @@
         });
       functions
         .add(settings, "y_fn")
-        .name("y(u, v)")
+        .name("surface_y(u, v)")
         .listen()
         .onFinishChange(() => {
           try {
             fn = Parser.parse(settings.y_fn).toJSFunction(["u", "v"]);
             parametric_surface.geometry.dispose();
             parametric_surface.geometry = new ParametricGeometry(
-              func(current_x_fn, fn, current_z_fn),
+              surface(current_x_fn, fn, current_z_fn),
               settings.points,
               settings.points
             );
-            func(current_x_fn, fn, current_z_fn)(
-              settings.point_u,
-              settings.point_v,
-              surface_point.position
-            );
-            recalculate_geometry();
+            const pos = new THREE.Vector3();
+            if (settings.point_type !== point_types[2])
+              surface(current_x_fn, fn, current_z_fn)(
+                settings.point_u,
+                settings.point_v,
+                pos
+              );
+            modifyArrow(surface_vector, {
+              pos,
+              vec: field.evaluate(pos),
+            });
+            recomputeGeometry();
 
             current_y = settings.y_fn;
             current_y_fn = fn;
@@ -834,23 +873,29 @@
         });
       functions
         .add(settings, "z_fn")
-        .name("z(u, v)")
+        .name("surface_z(u, v)")
         .listen()
         .onFinishChange(() => {
           try {
             fn = Parser.parse(settings.z_fn).toJSFunction(["u", "v"]);
             parametric_surface.geometry.dispose();
             parametric_surface.geometry = new ParametricGeometry(
-              func(current_x_fn, current_y_fn, fn),
+              surface(current_x_fn, current_y_fn, fn),
               settings.points,
               settings.points
             );
-            func(current_x_fn, current_y_fn, fn)(
-              settings.point_u,
-              settings.point_v,
-              surface_point.position
-            );
-            recalculate_geometry();
+            const pos = new THREE.Vector3();
+            if (settings.point_type !== point_types[2])
+              surface(current_x_fn, current_y_fn, fn)(
+                settings.point_u,
+                settings.point_v,
+                pos
+              );
+            modifyArrow(surface_vector, {
+              pos,
+              vec: field.evaluate(pos),
+            });
+            recomputeGeometry();
 
             current_z = settings.z_fn;
             current_z_fn = fn;
@@ -860,15 +905,15 @@
         });
       functions
         .add(settings, "fx")
-        .name("fx(x, y, z)")
+        .name("field_x(x, y, z)")
         .listen()
         .onFinishChange(() => {
           try {
             fn = Parser.parse(settings.fx).toJSFunction(["x", "y", "z"]);
             fn(0, 0, 0);
-            field.fx = new ScalerField(fn, field.h);
+            field.fx = new ScalerField(fn, field.delta);
 
-            recalculate_field();
+            recomputeField();
 
             current_fx = settings.fx;
             current_fx_fn = fn;
@@ -878,14 +923,14 @@
         });
       functions
         .add(settings, "fy")
-        .name("fy(x, y, z)")
+        .name("field_y(x, y, z)")
         .listen()
         .onFinishChange(() => {
           try {
             fn = Parser.parse(settings.fy).toJSFunction(["x", "y", "z"]);
-            field.fy = new ScalerField(fn, field.h);
+            field.fy = new ScalerField(fn, field.delta);
 
-            recalculate_field();
+            recomputeField();
 
             current_fy = settings.fy;
             current_fy_fn = fn;
@@ -895,14 +940,14 @@
         });
       functions
         .add(settings, "fz")
-        .name("fz(x, y, z)")
+        .name("field_z(x, y, z)")
         .listen()
         .onFinishChange(() => {
           try {
             fn = Parser.parse(settings.fz).toJSFunction(["x", "y", "z"]);
-            field.fz = new ScalerField(fn, field.h);
+            field.fz = new ScalerField(fn, field.delta);
 
-            recalculate_field();
+            recomputeField();
 
             current_fz = settings.fz;
             current_fz_fn = fn;
@@ -1064,16 +1109,22 @@
         .onFinishChange(() => {
           parametric_surface.geometry.dispose();
           parametric_surface.geometry = new ParametricGeometry(
-            func(current_x_fn, current_y_fn, current_z_fn),
+            surface(current_x_fn, current_y_fn, current_z_fn),
             settings.points,
             settings.points
           );
-          func(current_x_fn, current_y_fn, current_z_fn)(
-            settings.point_u,
-            settings.point_v,
-            surface_point.position
-          );
-          recalculate_geometry();
+          const pos = new THREE.Vector3();
+          if (settings.point_type !== point_types[2])
+            surface(current_x_fn, current_y_fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              pos
+            );
+          modifyArrow(surface_vector, {
+            pos,
+            vec: field.evaluate(pos),
+          });
+          recomputeGeometry();
         });
       advanced.add(settings, "reset_advanced").name("Reset");
       p1.add(settings, "delete_curve").name("Delete Curve (WIP)");
@@ -1206,36 +1257,69 @@
             scene.remove(line_field);
           }
         });
-      general
-        .add(settings, "surface_point")
-        .name("Surface Point")
+      const sp = general.addFolder("Surface Vector");
+      sp.add(settings, "surface_vector")
+        .name("enable")
         .onChange((value) => {
           if (value) {
-            scene.add(surface_point);
+            const pos = new THREE.Vector3();
+            if (settings.point_type !== point_types[2])
+              surface(current_x_fn, current_y_fn, current_z_fn)(
+                settings.point_u,
+                settings.point_v,
+                pos
+              );
+            modifyArrow(surface_vector, {
+              pos,
+              vec: field.evaluate(pos),
+            });
+            scene.add(surface_vector);
+            // pt.enable();
+            pu.enable();
+            pv.enable();
           } else {
-            scene.remove(surface_point);
+            scene.remove(surface_vector);
+            pt.disable();
+            pu.disable();
+            pv.disable();
           }
         });
-      general
-        .add(settings, "point_u", 0, 1, 0.01)
+      const pt = sp.add(settings, "point_type", point_types).name("type");
+      const pu = sp
+        .add(settings, "point_u", 0, 1, 0.001)
         .name("U")
         .onChange(() => {
-          func(current_x_fn, current_y_fn, current_z_fn)(
-            settings.point_u,
-            settings.point_v,
-            surface_point.position
-          );
+          const pos = new THREE.Vector3();
+          if (settings.point_type !== point_types[2])
+            surface(current_x_fn, current_y_fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              pos
+            );
+          modifyArrow(surface_vector, {
+            pos,
+            vec: field.evaluate(pos),
+          });
         });
-      general
-        .add(settings, "point_v", 0, 1, 0.01)
+      const pv = sp
+        .add(settings, "point_v", 0, 1, 0.001)
         .name("V")
         .onChange(() => {
-          func(current_x_fn, current_y_fn, current_z_fn)(
-            settings.point_u,
-            settings.point_v,
-            surface_point.position
-          );
+          const pos = new THREE.Vector3();
+          if (settings.point_type !== point_types[2])
+            surface(current_x_fn, current_y_fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              pos
+            );
+          modifyArrow(surface_vector, {
+            pos,
+            vec: field.evaluate(pos),
+          });
         });
+      pt.disable();
+      pu.disable();
+      pv.disable();
       general.add(settings, "add_curve").name("Add Curve (WIP)");
       general.add(settings, "reset_camera").name("Reset Camera");
       general
@@ -1267,6 +1351,7 @@
       exp.close();
       record.close();
       gui.close();
+      sp.close();
 
       // ==========================================================
 

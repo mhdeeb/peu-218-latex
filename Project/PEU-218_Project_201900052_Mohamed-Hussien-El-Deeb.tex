@@ -17,7 +17,7 @@
     urlcolor=RoyalBlue4,
 }
 
-\title{Verifying Stokes' Curl Theorem Using Simple Computational Methods}
+\title{Creating a Simple Vector Calculus Framework to Verify Stokes' Curl Theorem}
 \author{Mohamed Hussien El-Deeb (201900052)}
 \date{\today}
 
@@ -30,13 +30,34 @@
 \newpage
 \section{Introduction}
 
-
+Stokes' curl theorem, also known as the Kelvin-Stokes theorem after \href{https://en.wikipedia.org/wiki/Lord_Kelvin}{Lord Kelvin} and
+\href{https://en.wikipedia.org/wiki/Sir_George_Stokes,_1st_Baronet}{George Stokes}, is a theorem in vector calculus on \({\displaystyle \mathbb {R} ^{3}}\). Given
+a vector field, the theorem relates the integral of the curl of the vector field over some
+surface, to the line integral of the vector field around the boundary of the surface. This theorem can be
+stated as: The line integral of a vector field over a loop is equal to the surface
+integral of its curl over the enclosed surface. This unlocks integration shortcuts that greatly simplifies other theorems and speeds up computations.
+This project is an attempt to build a simple vector calculus framework to verify and visualize
+Stokes' curl theorem using basic numerical methods and the web graphics library \href{https://threejs.org/}{three.js}.
 
 \newpage
 \section{Stokes' Curl Theorem}
 \subsection{Definition}
 
+Stokes' theorem states that the line integral of a vector field \(\mathbf{F}\) around a closed curve \(C\) is equal to the surface integral of the curl of \(\mathbf{F}\) over any surface \(S\) bounded by \(C\). Mathematically, the theorem can be stated as:
 
+\[
+\oint_{C} \mathbf{F} \cdot d\mathbf{r} = \iint_{S} (\nabla \times \mathbf{F}) \cdot d\mathbf{S}
+\]
+
+where:
+
+\begin{itemize}
+    \item \(\mathbf{F}\) is a differentiable vector field.
+    \item \(C\) is a piecewise-smooth, positively oriented simple closed curve in space.
+    \item \(S\) is a piecewise-smooth, positively oriented surface in space bounded by \(C\).
+    \item \(d\mathbf{r}\) is the differential arc vector along \(C\).
+    \item \(d\mathbf{S}\) is the differential area vector of \(S\).
+\end{itemize}
 
 \newpage
 \section{Integration over a Path}
