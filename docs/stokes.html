@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <title>Stokes' Theorem</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js"
+        }
+      }
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+      }
+
+      .progress-bar-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+      }
+
+      #progress-bar {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50%;
+      }
+
+      .progress-bar-container label {
+        position: absolute;
+        top: 55%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+      }
+
+      .lil-gui {
+        --width: 400px;
+      }
+
+      #line {
+        position: absolute;
+        top: 16vh;
+        left: 0;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.8);
+        border-radius: 5px;
+        padding: 5px;
+        margin: 0;
+      }
+      #surface {
+        position: absolute;
+        top: 22vh;
+        left: 0;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.8);
+        border-radius: 5px;
+        padding: 5px;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress-bar-container">
+      <label id="progress-label" for="progress-bar">Loading...</label>
+      <progress id="progress-bar" value="0" max="100"></progress>
+    </div>
+    <canvas id="canvas"></canvas>
+    <p id="surface">Surface Integral:</p>
+    <p id="line">Line Integral:</p>
+    <script type="module">
+      import * as THREE from "three";
+      import Stats from "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js";
+      import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/controls/OrbitControls.js";
+      import { Parser } from "https://cdn.jsdelivr.net/npm/expr-eval@2.0.2/+esm";
+      import lilGui from "https://cdn.jsdelivr.net/npm/lil-gui@0.19.2/+esm";
+      import { ParametricGeometry } from "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/geometries/ParametricGeometry.js";
+
+      const progressBar = document.getElementById("progress-bar");
+      const progressLabel = document.getElementById("progress-label");
+
+      const line_text = document.getElementById("line");
+      const surface_text = document.getElementById("surface");
+
+      const loadingManager = new THREE.LoadingManager();
+
+      loadingManager.onLoad = function () {
+        document.querySelector(".progress-bar-container").style.display =
+          "none";
+      };
+
+      loadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
+        progressBar.value = (itemsLoaded / itemsTotal) * 100;
+        progressLabel.textContent = `Loaded ${itemsLoaded} of ${itemsTotal} files.`;
+      };
+
+      loadingManager.onError = function (url) {
+        console.log("There was an error loading " + url);
+      };
+
+      const gui = new lilGui();
+
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+
+      let canvas = document.getElementById("canvas");
+
+      let renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        canvas,
+        preserveDrawingBuffer: true,
+        alpha: true,
+      });
+
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      renderer.setSize(width, height);
+
+      renderer.setClearColor("#000", 1);
+
+      const stream = canvas.captureStream(0);
+      const track = stream.getVideoTracks()[0];
+      if (!track.requestFrame) {
+        track.requestFrame = () => stream.requestFrame();
+      }
+      const recorder = new MediaRecorder(stream, {
+        mimeType: "video/webm",
+      });
+      var chunks = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = (e) => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.setAttribute(
+          "download",
+          `parametric_surface_${new Date().toISOString()}.webm`
+        );
+        a.setAttribute("href", url);
+        a.click();
+        URL.revokeObjectURL(url);
+        chunks = [];
+      };
+
+      const stats = new Stats();
+      document.body.appendChild(stats.dom);
+      let fov = 45;
+      let camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 100);
+
+      camera.position.set(0, 0, 5);
+
+      let controls = new OrbitControls(camera, renderer.domElement);
+
+      let distance = 70;
+      let boundingHeight = Math.tan((fov * (Math.PI / 180)) / 2) * distance;
+      let boundingWidth = boundingHeight * (width / height);
+
+      controls.saveState();
+
+      window.addEventListener("resize", () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+
+        boundingHeight = Math.tan((fov * (Math.PI / 180)) / 2) * distance;
+        boundingWidth = boundingHeight * (width / height);
+
+        camera.aspect = width / height;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        renderer.setSize(width, height);
+      });
+
+      let scene = new THREE.Scene();
+
+      scene.add(camera);
+
+      let clock = new THREE.Clock();
+
+      const textureLoader = new THREE.TextureLoader(loadingManager);
+
+      loadingManager.onLoad();
+
+      const gridHelper_x = new THREE.GridHelper(128, 128, 0xff0000, 0xff0000);
+      gridHelper_x.material.transparent = true;
+      gridHelper_x.material.opacity = 0.2;
+      gridHelper_x.needsUpdate = true;
+      scene.add(gridHelper_x);
+
+      const gridHelper_y = new THREE.GridHelper(128, 128, 0x00ff00, 0x00ff00);
+      gridHelper_y.rotation.z = Math.PI / 2;
+      gridHelper_y.material.transparent = true;
+      gridHelper_y.material.opacity = 0.2;
+      gridHelper_y.needsUpdate = true;
+      scene.add(gridHelper_y);
+
+      const gridHelper_z = new THREE.GridHelper(128, 128, 0x0000ff, 0x0000ff);
+      gridHelper_z.rotation.x = Math.PI / 2;
+      gridHelper_z.material.transparent = true;
+      gridHelper_z.material.opacity = 0.2;
+      gridHelper_z.needsUpdate = true;
+      scene.add(gridHelper_z);
+
+      gridHelper_x.visible = false;
+      gridHelper_y.visible = false;
+      gridHelper_z.visible = false;
+
+      window.addEventListener("keydown", function (event) {
+        switch (event.code) {
+          case "KeyT":
+            grid_toggle.setValue(!grid_toggle.getValue());
+            break;
+        }
+      });
+
+      // ==========================================================
+      // ======================== Relevant Code ===================
+      // ==========================================================
+
+      const t_limit = 1;
+      const base_points = 32;
+      var c1_string = "0.";
+      var c2_string = "1.";
+      var c3_string = "0.";
+      var a_string = "0.5";
+      var fn;
+
+      const vertexShader = `
+             varying vec3 pos;
+
+             void main() {
+               gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+
+               pos = position;
+             }
+             `;
+
+      function frag(c1, c2, c3, a) {
+        return `
+             varying vec3 pos;
+             uniform int type;
+             uniform vec3 solid_color;
+             uniform float time;
+             uniform float max_time;
+             uniform float min_time;
+             uniform vec3 min_point;
+             uniform vec3 volume;
+             uniform bool normalize_parameters;
+
+             const float PI = 3.14159265359;
+
+             vec3 hsv2rgb(vec3 c) {
+                 vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                 vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+                 return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+             }
+
+             void main() {
+               float x = pos.x;
+               float y = pos.y;
+               float z = pos.z;
+               float t = time;
+
+               if (normalize_parameters) {
+                 float vx = volume.x;
+                 float vy = volume.y;
+                 float vz = volume.z;
+                 float vt = max_time - min_time;
+
+                 if (vx == 0.0) vx = 1.0;
+                 if (vy == 0.0) vy = 1.0;
+                 if (vz == 0.0) vz = 1.0;
+                 if (vt == 0.0) vt = 1.0;
+
+                 x = (x - min_point.x) / vx;
+                 y = (y - min_point.y) / vy;
+                 z = (z - min_point.z) / vz;
+
+
+                 t = (time - min_time) / vt;
+               }
+
+               if (type == 0) {
+                 vec3 color = vec3(${c1}, ${c2}, ${c3});
+                 gl_FragColor = vec4(color, ${a});
+               } else if (type == 1) {
+                 vec3 color = hsv2rgb(vec3(${c1}, ${c2}, ${c3}));
+                 gl_FragColor = vec4(color, ${a});
+               } else if (type == 2) {
+                 gl_FragColor = vec4(solid_color, ${a});
+               }
+             }
+             `;
+      }
+
+      function func(x, y, z) {
+        return (u, v, target) => {
+          let X = x(u, v);
+          let Y = y(u, v);
+          let Z = z(u, v);
+          target.set(X, Y, Z);
+        };
+      }
+
+      var current_x = "sin(PI*u/2)*cos(2*PI*v)";
+      var current_y = "cos(PI*u/2)";
+      var current_z = "sin(PI*u/2)*sin(2*PI*v)";
+      var current_fx = "2*x-z";
+      var current_fy = "-z*y*y";
+      var current_fz = "-z*z*y";
+
+      var current_x_fn = Parser.parse(current_x).toJSFunction(["u", "v"]);
+      var current_y_fn = Parser.parse(current_y).toJSFunction(["u", "v"]);
+      var current_z_fn = Parser.parse(current_z).toJSFunction(["u", "v"]);
+
+      var current_fx_fn = Parser.parse(current_fx).toJSFunction([
+        "x",
+        "y",
+        "z",
+      ]);
+      var current_fy_fn = Parser.parse(current_fy).toJSFunction([
+        "x",
+        "y",
+        "z",
+      ]);
+      var current_fz_fn = Parser.parse(current_fz).toJSFunction([
+        "x",
+        "y",
+        "z",
+      ]);
+
+      let parametric_surface_geometry = new ParametricGeometry(
+        func(current_x_fn, current_y_fn, current_z_fn),
+        base_points,
+        base_points
+      );
+
+      parametric_surface_geometry.computeBoundingBox();
+      let min = parametric_surface_geometry.boundingBox.min;
+      let vol = parametric_surface_geometry.boundingBox.max.clone().sub(min);
+
+      let material = new THREE.ShaderMaterial({
+        uniforms: {
+          type: { value: 2 },
+          solid_color: { value: new THREE.Color("#00ff00") },
+          time: { value: 0 },
+          min_point: { value: min },
+          volume: {
+            value: vol,
+          },
+          normalize_parameters: { value: true },
+          max_time: { value: t_limit },
+          min_time: { value: 0 },
+        },
+        vertexShader: vertexShader,
+        fragmentShader: frag(c1_string, c2_string, c3_string, a_string),
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+
+      let parametric_surface = new THREE.Mesh(
+        parametric_surface_geometry,
+        new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          wireframe: true,
+        })
+      );
+      let parametric_surface2 = new THREE.Mesh(
+        parametric_surface_geometry,
+        material
+      );
+
+      let surface_point = new THREE.Mesh(
+        new THREE.SphereGeometry(0.02, 32, 32),
+        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+      );
+
+      scene.add(parametric_surface);
+      scene.add(parametric_surface2);
+
+      function integrateLine(geometry, fn) {
+        const positionAttribute = geometry.getAttribute("position");
+
+        let sum = 0;
+
+        for (let i = 0; i < positionAttribute.count; i += 2) {
+          const va = new THREE.Vector3();
+          const vb = new THREE.Vector3();
+
+          va.fromBufferAttribute(positionAttribute, i);
+          vb.fromBufferAttribute(positionAttribute, i + 1);
+
+          const line = new THREE.Line3(va, vb);
+
+          sum += fn(line);
+        }
+
+        return sum;
+      }
+
+      function integrateArea(geometry, fn) {
+        const positionAttribute = geometry.getAttribute("position");
+        const indexAttribute = geometry.getIndex();
+
+        let sum = 0;
+
+        for (let i = 0; i < indexAttribute.count; i += 3) {
+          const a = indexAttribute.getX(i);
+          const b = indexAttribute.getX(i + 1);
+          const c = indexAttribute.getX(i + 2);
+
+          const va = new THREE.Vector3();
+          const vb = new THREE.Vector3();
+          const vc = new THREE.Vector3();
+
+          va.fromBufferAttribute(positionAttribute, a);
+          vb.fromBufferAttribute(positionAttribute, b);
+          vc.fromBufferAttribute(positionAttribute, c);
+
+          const face = new THREE.Triangle(va, vb, vc);
+
+          sum += fn(face);
+        }
+
+        return sum;
+      }
+
+      class ScalerField {
+        constructor(f, h = 0.0001) {
+          this.f = f;
+          this.h = h;
+        }
+
+        evaluate(point) {
+          return this.f(point.x, point.y, point.z);
+        }
+
+        grad(point) {
+          const dx =
+            (this.f(point.x + this.h, point.y, point.z) -
+              this.f(point.x - this.h, point.y, point.z)) /
+            (2 * this.h);
+
+          const dy =
+            (this.f(point.x, point.y + this.h, point.z) -
+              this.f(point.x, point.y - this.h, point.z)) /
+            (2 * this.h);
+
+          const dz =
+            (this.f(point.x, point.y, point.z + this.h) -
+              this.f(point.x, point.y, point.z - this.h)) /
+            (2 * this.h);
+
+          return new THREE.Vector3(dx, dy, dz);
+        }
+      }
+
+      class VectorField {
+        constructor({ fx, fy, fz, h = 0.0001 }) {
+          this.fx = new ScalerField(fx, h);
+          this.fy = new ScalerField(fy, h);
+          this.fz = new ScalerField(fz, h);
+          this.h = h;
+        }
+
+        evaluate(point) {
+          return new THREE.Vector3(
+            this.fx.evaluate(point),
+            this.fy.evaluate(point),
+            this.fz.evaluate(point)
+          );
+        }
+
+        divergence(point) {
+          const dx = this.fx.grad(point).x;
+          const dy = this.fy.grad(point).y;
+          const dz = this.fz.grad(point).z;
+
+          return dx + dy + dz;
+        }
+
+        curl(point) {
+          const dx = this.fx.grad(point);
+          const dy = this.fy.grad(point);
+          const dz = this.fz.grad(point);
+
+          return new THREE.Vector3(dz.y - dy.z, dx.z - dz.x, dy.x - dx.y);
+        }
+      }
+
+      const line_field = new THREE.Group();
+      const line_tangent = new THREE.Group();
+      const surface_field = new THREE.Group();
+      const surface_normal = new THREE.Group();
+
+      scene.add(line_field);
+      scene.add(line_tangent);
+      scene.add(surface_field);
+      // scene.add(surface_normal);
+
+      function drawArrow(origin, vector, color, object) {
+        const len = vector.length();
+        const dir = vector.clone().normalize();
+        const pos = origin.clone().add(vector.clone().multiplyScalar(-0.5));
+        const arrow = new THREE.ArrowHelper(dir, pos, len, color, 0.01, 0.01);
+        object.add(arrow);
+      }
+
+      var field = new VectorField({
+        fx: current_fx_fn,
+        fy: current_fy_fn,
+        fz: current_fz_fn,
+      });
+
+      let edge = new THREE.LineSegments(
+        new THREE.EdgesGeometry(parametric_surface_geometry, 100),
+        new THREE.LineBasicMaterial({ color: 0x00aaff })
+      );
+      scene.add(edge);
+
+      function recalculate_field() {
+        line_field.clear();
+        line_tangent.clear();
+        surface_field.clear();
+        surface_normal.clear();
+
+        i1 = integrateLine(edge.geometry, (line) => {
+          const dr = line.end.clone().sub(line.start);
+          const center = new THREE.Vector3();
+          line.getCenter(center);
+
+          const fn = field.evaluate(center);
+          fn.normalize();
+          fn.multiplyScalar(0.05);
+          drawArrow(center, fn, new THREE.Color(0x00ffff), line_field);
+
+          const fd = dr.clone();
+          fd.normalize();
+          fd.multiplyScalar(0.05);
+          drawArrow(center, fd, new THREE.Color(0xffff00), line_tangent);
+
+          return field.evaluate(center).dot(dr);
+        });
+
+        i2 = integrateArea(parametric_surface.geometry, (face) => {
+          const normal = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          face.getNormal(normal);
+          face.getMidpoint(center);
+          const curl = field.curl(center);
+
+          const fn = field.evaluate(center);
+          fn.normalize();
+          fn.multiplyScalar(0.05);
+          drawArrow(center, fn, new THREE.Color(0xff0000), surface_field);
+
+          const fd = normal.clone();
+          fd.multiplyScalar(0.05);
+          drawArrow(center, fd, new THREE.Color(0xff00ff), surface_normal);
+
+          return curl.dot(normal) * face.getArea();
+        });
+
+        i1 = Math.round(i1 * 10000) / 10000;
+        i2 = Math.round(i2 * 10000) / 10000;
+
+        line_text.textContent = `Line Integral: ${i1}`;
+        surface_text.textContent = `Surface Integral: ${i2}`;
+      }
+
+      function recalculate_geometry() {
+        parametric_surface.geometry.computeBoundingBox();
+        min = parametric_surface.geometry.boundingBox.min;
+        vol = parametric_surface.geometry.boundingBox.max.clone().sub(min);
+        parametric_surface2.geometry.dispose();
+        parametric_surface2.geometry = parametric_surface.geometry;
+
+        material.uniforms.min_point.value = min;
+        material.uniforms.volume.value = vol;
+
+        edge.geometry.dispose();
+        edge.geometry = new THREE.EdgesGeometry(
+          parametric_surface.geometry,
+          100
+        );
+
+        recalculate_field();
+      }
+
+      let i1;
+      let i2;
+
+      // ========================= SETTINGS =======================
+
+      var recording = false;
+
+      const color_type = ["rgb", "hsv", "solid"];
+      const export_ext = ["png", "webp", "jpg", "gif", "json"];
+
+      let settings = {
+        x_fn: current_x,
+        y_fn: current_y,
+        z_fn: current_z,
+        fx: current_fx,
+        fy: current_fy,
+        fz: current_fz,
+        normalize_parameters: true,
+        color_type: color_type[2],
+        c1: c1_string,
+        c2: c2_string,
+        c3: c3_string,
+        a: a_string,
+        solid_color: "#00ff00",
+        points: base_points,
+        reset_advanced: function () {
+          settings.points = base_points;
+          parametric_surface.geometry.dispose();
+          parametric_surface.geometry = new ParametricGeometry(
+            func(current_x_fn, current_y_fn, current_z_fn),
+            settings.points,
+            settings.points
+          );
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
+          );
+          recalculate_geometry();
+        },
+        animate: false,
+        time: t_limit,
+        t_min: 0,
+        t_max: t_limit,
+        speed_multiplier: 0.05,
+        reset: function () {
+          settings.animate = false;
+          settings.time = settings.t_max;
+          settings.speed_multiplier = 0.05;
+        },
+        surface: true,
+        edge: true,
+        wireframe: true,
+        surface_normal: false,
+        surface_field: true,
+        line_tangent: true,
+        line_field: true,
+        surface_point: false,
+        point_u: 0,
+        point_v: 0,
+        background: "#000000",
+        background_opacity: 1,
+        toggle_grid: false,
+        grid_helper: 0.2,
+        x_grid: true,
+        y_grid: true,
+        z_grid: true,
+        delete_curve: function () {},
+        reset_camera: function () {
+          controls.reset();
+        },
+        add_curve: function () {},
+        export_ext: export_ext[0],
+        export: function () {
+          if (settings.export_ext === export_ext[0]) {
+            renderer.domElement.toBlob((blob) => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.setAttribute(
+                "download",
+                `parametric_surface_${new Date().toISOString()}.png`
+              );
+              a.setAttribute("href", url);
+              a.click();
+              URL.revokeObjectURL(url);
+            });
+          } else if (settings.export_ext === export_ext[1]) {
+            renderer.domElement.toBlob((blob) => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.setAttribute(
+                "download",
+                `parametric_surface_${new Date().toISOString()}.webp`
+              );
+              a.setAttribute("href", url);
+              a.click();
+              URL.revokeObjectURL(url);
+            }, "image/webp");
+          } else if (settings.export_ext === export_ext[2]) {
+            renderer.domElement.toBlob((blob) => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.setAttribute(
+                "download",
+                `parametric_surface_${new Date().toISOString()}.jpg`
+              );
+              a.setAttribute("href", url);
+              a.click();
+              URL.revokeObjectURL(url);
+            }, "image/jpeg");
+          } else if (settings.export_ext === export_ext[3]) {
+            renderer.domElement.toBlob((blob) => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.setAttribute(
+                "download",
+                `parametric_surface_${new Date().toISOString()}.gif`
+              );
+              a.setAttribute("href", url);
+              a.click();
+              URL.revokeObjectURL(url);
+            }, "image/gif");
+          } else if (settings.export_ext === export_ext[4]) {
+            const json = gui.save();
+            const blob = new Blob([JSON.stringify(json)], {
+              type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.setAttribute(
+              "download",
+              `parametric_surface_${new Date().toISOString()}.json`
+            );
+            a.setAttribute("href", url);
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+        },
+        record: function () {
+          if (recording) {
+            record_button.name("Record");
+            export_button.enable();
+            load_button.enable();
+            recorder.stop();
+          } else {
+            record_button.name("Stop Recording");
+            export_button.disable();
+            load_button.disable();
+            recorder.start();
+          }
+
+          recording = !recording;
+        },
+        load_graph: function () {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = ".json";
+          input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const json = JSON.parse(e.target.result);
+              gui.load(json);
+            };
+            reader.readAsText(file);
+          };
+          input.click();
+        },
+      };
+
+      recalculate_geometry();
+
+      const p1 = gui.addFolder("Parametric 1");
+      const functions = p1.addFolder("Functions");
+      functions
+        .add(settings, "x_fn")
+        .name("x(u, v)")
+        .listen()
+        .onFinishChange(() => {
+          try {
+            fn = Parser.parse(settings.x_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry.dispose();
+            parametric_surface.geometry = new ParametricGeometry(
+              func(fn, current_y_fn, current_z_fn),
+              settings.points,
+              settings.points
+            );
+            func(fn, current_y_fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              surface_point.position
+            );
+            recalculate_geometry();
+
+            current_x = settings.x_fn;
+            current_x_fn = fn;
+          } catch (e) {
+            settings.x_fn = current_x;
+          }
+        });
+      functions
+        .add(settings, "y_fn")
+        .name("y(u, v)")
+        .listen()
+        .onFinishChange(() => {
+          try {
+            fn = Parser.parse(settings.y_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry.dispose();
+            parametric_surface.geometry = new ParametricGeometry(
+              func(current_x_fn, fn, current_z_fn),
+              settings.points,
+              settings.points
+            );
+            func(current_x_fn, fn, current_z_fn)(
+              settings.point_u,
+              settings.point_v,
+              surface_point.position
+            );
+            recalculate_geometry();
+
+            current_y = settings.y_fn;
+            current_y_fn = fn;
+          } catch (e) {
+            settings.y_fn = current_y;
+          }
+        });
+      functions
+        .add(settings, "z_fn")
+        .name("z(u, v)")
+        .listen()
+        .onFinishChange(() => {
+          try {
+            fn = Parser.parse(settings.z_fn).toJSFunction(["u", "v"]);
+            parametric_surface.geometry.dispose();
+            parametric_surface.geometry = new ParametricGeometry(
+              func(current_x_fn, current_y_fn, fn),
+              settings.points,
+              settings.points
+            );
+            func(current_x_fn, current_y_fn, fn)(
+              settings.point_u,
+              settings.point_v,
+              surface_point.position
+            );
+            recalculate_geometry();
+
+            current_z = settings.z_fn;
+            current_z_fn = fn;
+          } catch (e) {
+            settings.z_fn = current_z;
+          }
+        });
+      functions
+        .add(settings, "fx")
+        .name("fx(x, y, z)")
+        .listen()
+        .onFinishChange(() => {
+          try {
+            fn = Parser.parse(settings.fx).toJSFunction(["x", "y", "z"]);
+            fn(0, 0, 0);
+            field.fx = new ScalerField(fn, field.h);
+
+            recalculate_field();
+
+            current_fx = settings.fx;
+            current_fx_fn = fn;
+          } catch (e) {
+            settings.fx = current_fx;
+          }
+        });
+      functions
+        .add(settings, "fy")
+        .name("fy(x, y, z)")
+        .listen()
+        .onFinishChange(() => {
+          try {
+            fn = Parser.parse(settings.fy).toJSFunction(["x", "y", "z"]);
+            field.fy = new ScalerField(fn, field.h);
+
+            recalculate_field();
+
+            current_fy = settings.fy;
+            current_fy_fn = fn;
+          } catch (e) {
+            settings.fy = current_fy;
+          }
+        });
+      functions
+        .add(settings, "fz")
+        .name("fz(x, y, z)")
+        .listen()
+        .onFinishChange(() => {
+          try {
+            fn = Parser.parse(settings.fz).toJSFunction(["x", "y", "z"]);
+            field.fz = new ScalerField(fn, field.h);
+
+            recalculate_field();
+
+            current_fz = settings.fz;
+            current_fz_fn = fn;
+          } catch (e) {
+            settings.fz = current_fz;
+          }
+        });
+      const color = p1.addFolder("Color");
+      color
+        .add(settings, "normalize_parameters")
+        .name("Normalize Parameters")
+        .onChange(() => {
+          material.uniforms.normalize_parameters.value =
+            settings.normalize_parameters;
+        });
+      color
+        .add(settings, "color_type", color_type)
+        .name("Color Type")
+        .onChange((value) => {
+          if (value === color_type[0]) {
+            c1.name("R(x, y, z, t)");
+            c2.name("G(x, y, z, t)");
+            c3.name("B(x, y, z, t)");
+            c1.show();
+            c2.show();
+            c3.show();
+            solid_color.hide();
+            material.uniforms.type.value = 0;
+          } else if (value === color_type[1]) {
+            c1.name("H(x, y, z, t)");
+            c2.name("S(x, y, z, t)");
+            c3.name("V(x, y, z, t)");
+            c1.show();
+            c2.show();
+            c3.show();
+            solid_color.hide();
+            material.uniforms.type.value = 1;
+          } else {
+            c1.hide();
+            c2.hide();
+            c3.hide();
+            solid_color.show();
+            material.uniforms.type.value = 2;
+          }
+        });
+      const c1 = color
+        .add(settings, "c1")
+        .name("R(x, y, z, t)")
+        .listen()
+        .hide()
+        .onFinishChange((value) => {
+          c1_string = value;
+          material.fragmentShader = frag(
+            c1_string,
+            c2_string,
+            c3_string,
+            a_string
+          );
+          material.needsUpdate = true;
+        });
+      const c2 = color
+        .add(settings, "c2")
+        .name("G(x, y, z, t)")
+        .listen()
+        .hide()
+        .onFinishChange((value) => {
+          c2_string = value;
+          material.fragmentShader = frag(
+            c1_string,
+            c2_string,
+            c3_string,
+            a_string
+          );
+          material.needsUpdate = true;
+        });
+      const c3 = color
+        .add(settings, "c3")
+        .name("B(x, y, z, t)")
+        .listen()
+        .hide()
+        .onFinishChange((value) => {
+          c3_string = value;
+          material.fragmentShader = frag(
+            c1_string,
+            c2_string,
+            c3_string,
+            a_string
+          );
+          material.needsUpdate = true;
+        });
+      const solid_color = color
+        .addColor(settings, "solid_color")
+        .name("Color")
+
+        .onChange((value) => {
+          material.uniforms.solid_color.value = new THREE.Color(value);
+        });
+      color
+        .add(settings, "a")
+        .name("A(x, y, z, t)")
+        .onFinishChange((value) => {
+          a_string = value;
+          material.fragmentShader = frag(
+            c1_string,
+            c2_string,
+            c3_string,
+            a_string
+          );
+          material.needsUpdate = true;
+        });
+      const animation = p1.addFolder("Animation");
+      animation.add(settings, "animate").name("Animate").listen();
+      animation
+        .add(settings, "speed_multiplier", 0, 10, 0.01)
+        .name("Speed Multiplier")
+        .listen();
+      const time = animation
+        .add(settings, "time", settings.t_min, settings.t_max, 0.01)
+        .name("Time")
+        .listen()
+        .onChange((value) => {
+          material.uniforms.time.value = value;
+        });
+      const time_min = animation
+        .add(settings, "t_min")
+        .name("Min Time")
+        .onChange((value) => {
+          if (value > settings.t_max) {
+            settings.t_max = value;
+            time.max(value);
+            time_max.updateDisplay();
+          }
+        })
+        .onFinishChange((value) => {
+          time.min(value);
+          material.uniforms.min_time.value = value;
+        });
+      const time_max = animation
+        .add(settings, "t_max")
+        .name("Max Time")
+        .onChange((value) => {
+          if (value < settings.t_min) {
+            settings.t_min = value;
+            time.min(value);
+            time_min.updateDisplay();
+          }
+        })
+        .onFinishChange((value) => {
+          time.max(value);
+          material.uniforms.max_time.value = value;
+        });
+      animation.add(settings, "reset").name("Reset");
+      animation.close();
+      const advanced = p1.addFolder("Advanced");
+      advanced
+        .add(settings, "points", 1, 128, 1)
+        .name("Points")
+        .listen()
+        .onFinishChange(() => {
+          parametric_surface.geometry.dispose();
+          parametric_surface.geometry = new ParametricGeometry(
+            func(current_x_fn, current_y_fn, current_z_fn),
+            settings.points,
+            settings.points
+          );
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
+          );
+          recalculate_geometry();
+        });
+      advanced.add(settings, "reset_advanced").name("Reset");
+      p1.add(settings, "delete_curve").name("Delete Curve (WIP)");
+      const grid = gui.addFolder("Grid (WIP)");
+      const grid_toggle = grid
+        .add(settings, "toggle_grid")
+        .name("Toggle Grid")
+        .onChange((value) => {
+          if (value) {
+            grid_opacity.enable();
+            x_grid.enable();
+            y_grid.enable();
+            z_grid.enable();
+
+            gridHelper_x.visible = settings.x_grid;
+            gridHelper_y.visible = settings.y_grid;
+            gridHelper_z.visible = settings.z_grid;
+          } else {
+            grid_opacity.disable();
+            x_grid.disable();
+            y_grid.disable();
+            z_grid.disable();
+
+            gridHelper_x.visible = false;
+            gridHelper_y.visible = false;
+            gridHelper_z.visible = false;
+          }
+        });
+      const grid_opacity = grid
+        .add(settings, "grid_helper", 0, 1, 0.01)
+        .name("Grid Opacity")
+        .onChange((value) => {
+          gridHelper_x.material.opacity = value;
+          gridHelper_x.material.needsUpdate = true;
+          gridHelper_y.material.opacity = value;
+          gridHelper_y.material.needsUpdate = true;
+          gridHelper_z.material.opacity = value;
+          gridHelper_z.material.needsUpdate = true;
+        });
+      const x_grid = grid
+        .add(settings, "x_grid")
+        .name("X Grid")
+        .onChange((value) => {
+          gridHelper_x.visible = value;
+        });
+      const y_grid = grid
+        .add(settings, "y_grid")
+        .name("Y Grid")
+        .onChange((value) => {
+          gridHelper_y.visible = value;
+        });
+      const z_grid = grid
+        .add(settings, "z_grid")
+        .name("Z Grid")
+        .onChange((value) => {
+          gridHelper_z.visible = value;
+        });
+      grid_opacity.disable();
+      x_grid.disable();
+      y_grid.disable();
+      z_grid.disable();
+      const general = gui.addFolder("General");
+      general
+        .add(settings, "surface")
+        .name("surface")
+        .onChange((value) => {
+          if (value) {
+            scene.add(parametric_surface2);
+          } else {
+            scene.remove(parametric_surface2);
+          }
+        });
+      general
+        .add(settings, "edge")
+        .name("edge")
+        .onChange((value) => {
+          if (value) {
+            scene.add(edge);
+          } else {
+            scene.remove(edge);
+          }
+        });
+      general
+        .add(settings, "wireframe")
+        .name("Wireframe")
+        .onChange((value) => {
+          if (value) {
+            scene.add(parametric_surface);
+          } else {
+            scene.remove(parametric_surface);
+          }
+        });
+      general
+        .add(settings, "surface_normal")
+        .name("Surface Normal")
+        .onChange((value) => {
+          if (value) {
+            scene.add(surface_normal);
+          } else {
+            scene.remove(surface_normal);
+          }
+        });
+      general
+        .add(settings, "surface_field")
+        .name("Surface Field")
+        .onChange((value) => {
+          if (value) {
+            scene.add(surface_field);
+          } else {
+            scene.remove(surface_field);
+          }
+        });
+      general
+        .add(settings, "line_tangent")
+        .name("Line Tangent")
+        .onChange((value) => {
+          if (value) {
+            scene.add(line_tangent);
+          } else {
+            scene.remove(line_tangent);
+          }
+        });
+      general
+        .add(settings, "line_field")
+        .name("Line Field")
+        .onChange((value) => {
+          if (value) {
+            scene.add(line_field);
+          } else {
+            scene.remove(line_field);
+          }
+        });
+      general
+        .add(settings, "surface_point")
+        .name("Surface Point")
+        .onChange((value) => {
+          if (value) {
+            scene.add(surface_point);
+          } else {
+            scene.remove(surface_point);
+          }
+        });
+      general
+        .add(settings, "point_u", 0, 1, 0.01)
+        .name("U")
+        .onChange(() => {
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
+          );
+        });
+      general
+        .add(settings, "point_v", 0, 1, 0.01)
+        .name("V")
+        .onChange(() => {
+          func(current_x_fn, current_y_fn, current_z_fn)(
+            settings.point_u,
+            settings.point_v,
+            surface_point.position
+          );
+        });
+      general.add(settings, "add_curve").name("Add Curve (WIP)");
+      general.add(settings, "reset_camera").name("Reset Camera");
+      general
+        .addColor(settings, "background")
+        .name("Background")
+        .listen()
+        .onChange(() => {
+          renderer.setClearColor(
+            settings.background,
+            settings.background_opacity
+          );
+        });
+      general
+        .add(settings, "background_opacity", 0, 1, 0.01)
+        .name("Background Opacity")
+        .onChange((value) => {
+          renderer.setClearColor(settings.background, value);
+        });
+      const exp = gui.addFolder("Export");
+      exp.add(settings, "export_ext", export_ext).name("Extension");
+      const export_button = exp.add(settings, "export").name("Export");
+      const record = exp.addFolder("Record");
+      const record_button = record.add(settings, "record").name("Record");
+
+      const load_button = gui.add(settings, "load_graph").name("Load JSON");
+
+      color.close();
+      grid.close();
+      exp.close();
+      record.close();
+      gui.close();
+
+      // ==========================================================
+
+      function update(delta) {
+        if (settings.animate) {
+          settings.time += delta * settings.speed_multiplier;
+          if (settings.time > settings.t_max) settings.time = settings.t_min;
+          else if (settings.time < settings.t_min)
+            settings.time = settings.t_max;
+          material.uniforms.time.value = settings.time;
+        }
+        stats.update();
+      }
+
+      // ==========================================================
+      // ======================== End Relevant Code ===============
+      // ==========================================================
+
+      function render() {
+        renderer.render(scene, camera);
+        if (recording) track.requestFrame();
+      }
+
+      function animate() {
+        let delta = clock.getDelta();
+        render();
+        update(delta);
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
