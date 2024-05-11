@@ -46,7 +46,7 @@ Stokes' curl theorem using basic numerical methods and the web graphics library 
 Stokes' theorem states that the line integral of a vector field \(\mathbf{F}\) around a closed curve \(C\) is equal to the surface integral of the curl of \(\mathbf{F}\) over any surface \(S\) bounded by \(C\). Mathematically, the theorem can be stated as:
 
 \[
-\oint_{C} \mathbf{F} \cdot d\mathbf{r} = \iint_{S} (\nabla \times \mathbf{F}) \cdot d\mathbf{S}
+    \oint_{C} \mathbf{F} \cdot d\mathbf{r} = \iint_{S} (\nabla \times \mathbf{F}) \cdot d\mathbf{S}
 \]
 
 where:
@@ -62,12 +62,89 @@ where:
 \newpage
 \section{Integration over a Path}
 
+Since computers are discrete, we need to approximate the integral of a function over a path using numerical methods which means we will revert to using summation instead of integration while noting the values converge as the step size decreases.
 
+Suppose we want to sum up the values of a function \(f(x, y, z)\) along a path \(C\) in space.
+We can approximate the path by dividing it into many small line segments and approximate the function by a constant value over each segment.
+The sum of the values of the function over all segments is the integral of the function over the path.
+Numerically, the integral can be approximated by the following formula:
+
+\[
+    \sum_{i=0}^{n} f(L_i)
+\]
+
+where:
+
+\begin{itemize}
+    \item \(f\) is the function to be integrated.
+    \item \(L_i\) is a small line segment on the path.
+    \item \(n\) is the integer number of line segments.
+\end{itemize}
+
+\(L_i\) is defined as follows:
+
+\[
+    L_i = \left\langle C\left(i \Delta t\right), C\left((i + 1)\Delta t\right)\right\rangle
+\]
+
+where:
+
+\begin{itemize}
+    \item \(C(t)\) is the parametric equation of the path.
+    \item \(\Delta t\) is the step size.
+\end{itemize}
+
+We can choose our parameter \(t\) to be \(0 \leq t \leq 1\) meaning we can substitute \(\Delta t\) with
+\(\frac{1}{n}\).
+
+Note that it is possible to convert parameter limits from \([a, b]\) to \([0, 1]\) using the following formula as long as \(a \neq b\):
+
+\[
+    P(t), \quad a \leq t \leq b \quad \rightarrow \quad P\left(\frac{t - a}{b - a}\right), \quad 0 \leq t \leq 1
+\]
+
+Now we arrive at the following formula:
+
+\[
+    \sum_{i=0}^{n} f\left(L_i\right)
+\]
+
+\[
+    L_i = \left\langle C\left(\frac{i}{n}\right), C\left(\frac{i + 1}{n}\right)\right\rangle
+\]
+
+The higher the value of \(n\), the more accurate the approximation.
 
 \newpage
 \section{Integration over a Surface}
 
+Similarly, we can approximate the integral of a function \(f(x, y, z)\) over a surface \(S\) using numerical methods.
+We can divide the surface into small triangles and approximate the function by a constant value over each triangle.
+The sum of the values of the function over all triangles converges to the integral of the function over the surface
+as the limit of the step size reach 0.
 
+Unlike the path, the surface is a 2D object in 3D space which means we need two parameters to define a point on the surface and
+the triangle construction will be a bit more complex.
+
+Numerically, the integral can be approximated by the following formula:
+
+\[
+    \sum_{i, j=0}^{n, m} f(T_{ij})
+\]
+
+where:
+
+\begin{itemize}
+    \item \(f\) is the function to be integrated.
+    \item \(T_i\) is a small triangle on the surface.
+    \item \(n\) is the integer number of triangles.
+\end{itemize}
+
+\(T_i\) is defined as follows:
+
+\[
+    T_i = \left\langle S\left(i \Delta u, j \Delta v\right), S\left((i + 1)\Delta u, j \Delta v\right), S\left(i \Delta u, (j + 1) \Delta v\right)\right\rangle
+\]
 
 \newpage
 \section{Scaler Field}
