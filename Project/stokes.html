@@ -796,6 +796,18 @@
             reader.onload = (e) => {
               const json = JSON.parse(e.target.result);
               gui.load(json);
+              const pos = new THREE.Vector3();
+              if (settings.point_type !== point_types[2])
+                surface(current_x_fn, current_y_fn, current_z_fn)(
+                  settings.point_u,
+                  settings.point_v,
+                  pos
+                );
+              modifyArrow(surface_vector, {
+                pos,
+                vec: field.evaluate(pos),
+              });
+              recomputeGeometry();
             };
             reader.readAsText(file);
           };
