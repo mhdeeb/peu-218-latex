@@ -124,6 +124,26 @@ The higher the value of \(n\), the more accurate the approximation.
 
 \subsection{Implementation}
 
+As a proof of concept, we can implement the path integral of a scalar field in three.js\cite{El-Deeb_PEU-218_Stokes_Threejs}. All example code is
+part of the implementation software and can be found in the repository\cite{El-Deeb_PEU-218_Assignments}. Note that knowledge of three.js and computer graphics is required to understand the code.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/path_int.png}
+    \caption{Path Integral of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
+As it can be seen, the path integral of a scalar field is approximated by summing up the values of the scalar field over many small line segments on the path.
+The boundary path itself is constructed using the edge geometry in three.js.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/path.png}
+    \caption{boundary path of the surface of half a sphere\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
+This integration method is used to compute the path integral side of Stokes' curl theorem.
+
 \newpage
 \section{Integration over a Surface}
 
@@ -173,6 +193,25 @@ where:
 
 \subsection{Implementation}
 
+Surface integration follows the same spirit of path integration, we can implement the surface integral of a scalar field in three.js\cite{El-Deeb_PEU-218_Stokes_Threejs}.
+Instead of constructing a boundary path, we construct a surface mesh using parametric geometry in three.js and loop over the triangles within.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/surface_int.png}
+    \caption{Surface Integral of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
+As it can be seen, the surface integral of a scalar field is approximated by summing up the values of the scalar field over many small triangles on the surface.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/surface.png}
+    \caption{Triangle mesh and surface normals of the surface of a paraboloid\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
+This integration method is used to compute the surface integral side of Stokes' curl theorem.
+
 \newpage
 \section{Scaler Field}
 \subsection{Definition}
@@ -190,6 +229,9 @@ We may want to visualize the scalar field and numerous ways to do so, one way is
 In that case we would need to pre-compute the scalar field to find the minimum and maximum values to normalize the color map. if the field is 2D we plot it on a 3D surface where the height of the surface represents the value of the scalar field at each point.
 
 \subsection{Implementation}
+
+The implementation of a scalar field is straightforward, we can implement the scalar field as a class that contains an arbitrary function and a method that takes a 3D point as input and returns a scalar value.
+And class methods to represent other operations on the scalar field such as the partial derivatives and the gradient.
 
 \subsection{Partial Derivatives of a Scalar Field}
 
@@ -220,6 +262,16 @@ where \(h\) is the step size. We need to be careful with the step size as it aff
 
 \subsubsection{Implementation}
 
+In this program, we can implement the partial derivatives using the finite difference method.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/partial.png}
+    \caption{Partial Derivatives of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
+Note: We evaluate the partial derivatives at the center of the cells to get a more accurate approximation.
+
 \subsection{Gradient of a Scalar Field}
 
 \subsubsection{Definition}
@@ -234,6 +286,14 @@ We could implement the gradient as a function that takes a 3D point as input and
 Where the partial derivatives can be approximated using finite differences.
 
 \subsubsection{Implementation}
+
+The gradient of a scalar field is the an implementation of the partial derivatives of the scalar field.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/grad.png}
+    \caption{Gradient of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
 
 \newpage
 \section{Vector Field}
@@ -467,7 +527,5 @@ In this project, we have built a simple vector calculus framework to verify and 
 \section{References}
 \bibliographystyle{plain}
 \bibliography{references}
-\nocite{El-Deeb_PEU-218_Assignments}
-\nocite{El-Deeb_PEU-218_Stokes_Threejs}
 
 \end{document}

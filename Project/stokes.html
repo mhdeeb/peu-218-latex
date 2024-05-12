@@ -321,6 +321,7 @@
       }
 
       function pathIntegral(curve_geometry, fn) {
+        // get the points positions from the mesh
         const positionAttribute = curve_geometry.getAttribute("position");
 
         let sum = 0;
@@ -329,11 +330,13 @@
           const p1 = new THREE.Vector3();
           const p2 = new THREE.Vector3();
 
+          // get the positions of the two points that make up the line segment
           p1.fromBufferAttribute(positionAttribute, i);
           p2.fromBufferAttribute(positionAttribute, i + 1);
 
           const line = new THREE.Line3(p1, p2);
 
+          // apply the function to the line segment and add the result to the sum
           sum += fn(line);
         }
 
@@ -342,11 +345,15 @@
 
       function surfaceIntegral(surface_geometry, fn) {
         const positionAttribute = surface_geometry.getAttribute("position");
+
+        // get the indices of the vertices that make up the faces
         const indexAttribute = surface_geometry.getIndex();
 
         let sum = 0;
 
         for (let i = 0; i < indexAttribute.count; i += 3) {
+
+          // get the indices of the vertices that make up each face
           const a = indexAttribute.getX(i);
           const b = indexAttribute.getX(i + 1);
           const c = indexAttribute.getX(i + 2);
@@ -355,12 +362,14 @@
           const vb = new THREE.Vector3();
           const vc = new THREE.Vector3();
 
+          // get the positions of the vertices that make up the face
           va.fromBufferAttribute(positionAttribute, a);
           vb.fromBufferAttribute(positionAttribute, b);
           vc.fromBufferAttribute(positionAttribute, c);
 
           const face = new THREE.Triangle(va, vb, vc);
 
+          // apply the function to the face and add the result to the sum
           sum += fn(face);
         }
 
