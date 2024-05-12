@@ -130,7 +130,7 @@ part of the implementation software and can be found in the repository\cite{El-D
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/path_int.png}
-    \caption{Path Integral of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+    \caption{Path Integral of a Scalar Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
 \end{figure}
 
 As it can be seen, the path integral of a scalar field is approximated by summing up the values of the scalar field over many small line segments on the path.
@@ -199,7 +199,7 @@ Instead of constructing a boundary path, we construct a surface mesh using param
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/surface_int.png}
-    \caption{Surface Integral of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+    \caption{Surface Integral of a Scalar Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
 \end{figure}
 
 As it can be seen, the surface integral of a scalar field is approximated by summing up the values of the scalar field over many small triangles on the surface.
@@ -267,7 +267,7 @@ In this program, we can implement the partial derivatives using the finite diffe
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/partial.png}
-    \caption{Partial Derivatives of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+    \caption{Partial Derivatives of a Scalar Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
 \end{figure}
 
 Note: We evaluate the partial derivatives at the center of the cells to get a more accurate approximation.
@@ -292,7 +292,7 @@ The gradient of a scalar field is the an implementation of the partial derivativ
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{images/grad.png}
-    \caption{Gradient of a Scalar Field\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+    \caption{Gradient of a Scalar Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
 \end{figure}
 
 \newpage
@@ -315,6 +315,16 @@ The difference only amounts to a shift in the position of the vectors by half it
 
 \subsection{Implementation}
 
+The implementation of a vector field is similar to the implementation of a scalar field, we can implement the vector field as a class that contains 3 arbitrary functions and have class methods to represent other operations on the vector field such as the divergence and the curl.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/vector.png}
+    \caption{Vector Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
+Note: The evaluate function just evaluates the vector field at a given point by calling the functions and return the result.
+
 \subsection{Divergence of a Vector Field}
 
 \subsubsection{Definition}
@@ -329,6 +339,14 @@ Since in divergence we are dealing with each component of the vector field separ
 Then we sum up the partial derivatives of each component to get the divergence.
 
 \subsubsection{Implementation}
+
+The divergence of a vector field is the sum of the partial derivatives of each component of the vector field.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/div.png}
+    \caption{Divergence of a Vector Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
 
 \subsection{Curl of a Vector Field}
 
@@ -345,10 +363,16 @@ Then we arrange the partial derivatives in the correct order to get the curl.
 
 \subsubsection{Implementation}
 
+The curl of a vector field is the difference of the partial derivatives of each component of the vector field.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/curl.png}
+    \caption{Curl of a Vector Field Code\cite{El-Deeb_PEU-218_Stokes_Threejs}}
+\end{figure}
+
 \newpage
 \section{Result}
-
-
 
 \subsection{Verification of Stokes' Curl Theorem}
 
