@@ -5,6 +5,7 @@
 \usepackage{parskip}
 \usepackage{float}
 \usepackage{amsmath}
+\usepackage{esint}
 \usepackage{amssymb}
 \usepackage{enumitem}
 \usepackage[thicklines]{cancel}
@@ -39,6 +40,41 @@ Use the Divergence theorem to evaluate \(\iint_S \vec{F} \cdot d \vec{S}\) where
 
 \subsection{Solution}
 
+\[
+    \iiint_V \vec{\nabla} \cdot \overrightarrow{\boldsymbol{u}} d V=\oiint_S \overrightarrow{\boldsymbol{u}} \cdot \widehat{\boldsymbol{n}} d S
+\]
+
+\[
+    \vec{\nabla} \cdot \vec{F} =
+    + \pi \cos (\pi x)
+    + 3 z y^2
+    + 2 z
+\]
+
+\[
+    \iiint_V \vec{\nabla} \cdot \vec{F} d V
+    = \int_{1}^{4} \int_{0}^{1} \int_{-1}^{2} \left( \pi \cos (\pi x) + 3 z y^2 + 2 z \right) d x d y d z
+\]
+
+\[
+    = \int_{1}^{4} \int_{0}^{1} {\left[ \sin (\pi x) + 3 z y^2 x + 2 z x \right]}_{-1}^{2} d y d z
+\]
+
+\[
+    = \int_{1}^{4} \int_{0}^{1} \left( 6 z y^2 + 4 z \right) d y d z
+\]
+
+\[
+    = \int_{1}^{4} {\left[ 2 z y^3 + 4 z y \right]}_{0}^{1} d z
+\]
+
+\[
+    = 6 \int_{1}^{4} z d z
+    = 3 {\left[ z^2 \right]}_{1}^{4}
+    = 3 \left( 16 - 1 \right)
+    = 45
+\]
+
 \newpage
 \section{Question 2}
 
@@ -53,6 +89,186 @@ Use Stokes' theorem to evaluate \(\int_C \vec{F} \cdot d \vec{r}\) where \(\vec{
 
 \subsection{Solution}
 
+\[
+    \iint_S \vec{\nabla} \times \overrightarrow{\boldsymbol{u}} \cdot \widehat{\boldsymbol{n}} d S=\oint_C \overrightarrow{\boldsymbol{u}} \cdot d \vec{r}
+\]
+
+\[
+    \vec{\nabla} \times \vec{F} =
+    \begin{vmatrix}
+        \hat{\imath}                & \hat{\jmath}                & \hat{k}                     \\
+        \frac{\partial}{\partial x} & \frac{\partial}{\partial y} & \frac{\partial}{\partial z} \\
+        3 y x^2 + z^3               & y^2                         & 4 y x^2
+    \end{vmatrix}
+    = 4 x^2 \hat{\imath} + \left(3 z^2 - 8 x y\right)  \hat{\jmath} - 3 x^2 \hat{k}
+\]
+
+The normal of the triangle is same as the normal of the plane that passes through the three vertices of the triangle.
+
+The equation of the plane is
+
+\[
+    \frac{x}{4} + \frac{y}{2} + \frac{z}{3} = 1
+\]
+
+The normal of the plane and the triangle is
+
+\[
+    \vec{n} = \left( \frac{1}{4}, \frac{1}{2}, \frac{1}{3} \right)
+\]
+
+\[
+    \hat{n} = \frac{\vec{n}}{\left| \vec{n} \right|}
+    = \frac{\frac{1}{4} \hat{\imath} + \frac{1}{2} \hat{\jmath} + \frac{1}{3} \hat{k}}{\sqrt{\frac{1}{16} + \frac{1}{4} + \frac{1}{9}}}
+    = \frac{3 \hat{\imath} + 6 \hat{\jmath} + 4 \hat{k}}{\sqrt{61}}
+\]
+
+\[
+    \vec{\nabla} \times \vec{F} \cdot \hat{n}
+    = \left(
+    4 x^2 \hat{\imath}
+    + \left(3 z^2 - 8 x y\right) \hat{\jmath}
+    - 3 x^2 \hat{k}
+    \right) \cdot
+    \frac{3 \hat{\imath} + 6 \hat{\jmath} + 4 \hat{k}}{\sqrt{61}}
+\]
+
+\[
+    = \frac{12 x^2 + 18 z^2 - 48 x y - 12 x^2}{\sqrt{61}}
+    = \frac{18 z^2 - 48 x y}{\sqrt{61}}
+\]
+
+\[
+    \iint_S \vec{\nabla} \times \vec{F} \cdot \hat{n} d S
+    = \frac{6}{\sqrt{61}} \iint_S \left(3 z^2 - 8 x y\right)  d S
+\]
+
+\[
+    \iint_S f(x, y, z) d S= \iint_D f(x, y, g(x, y))|\vec{\nabla} \emptyset| d x d y
+\]
+
+\[
+    g(x, y) = 3 - \frac{3}{4} x - \frac{3}{2} y
+\]
+
+\[
+    \emptyset = z - 3 + \frac{3}{4} x + \frac{3}{2} y
+\]
+
+\[
+    \vec{\nabla} \emptyset = \left( \frac{3}{4}, \frac{3}{2}, 1 \right)
+\]
+
+\[
+    |\vec{\nabla} \emptyset| = \sqrt{{\left( \frac{3}{4} \right)}^2 + {\left( \frac{3}{2} \right)}^2 + 1^2}
+    = \sqrt{\frac{9}{16} + \frac{9}{4} + 1}
+    = \sqrt{\frac{9 + 36 + 16}{16}}
+\]
+
+\[
+    = \sqrt{\frac{61}{16}}
+    = \frac{\sqrt{61}}{4}
+\]
+
+\[
+    \iint_S \vec{\nabla} \times \vec{F} \cdot \hat{n} d S
+    = \frac{3}{2} \int_0^2 \int_0^{4-y} \left(\frac{27}{16} {\left(x + 2y - 4\right)}^2 - 8 x y\right)  dx dy
+\]
+
+
+\[
+    = \frac{3}{2} \int_0^2 {\left[\frac{27}{48} {\left(x + 2y - 4\right)}^3 - 4 x^2 y\right]}_0^{4-y} dy
+\]
+
+\[
+    = \frac{3}{2} \int_0^2 \left[-\frac{165}{48} y^3 + 32 y^2 - 64 y - \frac{9}{2} {\left(y - 2\right)}^3\right] dy
+\]
+
+\[
+    = \frac{3}{2} {\left[ -\frac{165}{192} y^4 + \frac{32}{3} y^3 - 32 y^2 - \frac{9}{8} {\left(y - 2\right)}^4 \right]}_0^2
+\]
+
+\[
+    = \frac{3}{2} \left[ -\frac{165}{192} 2^4 + \frac{32}{3} 2^3 - 32*2^2 + \frac{9}{8} 2^4 \right]
+    = -\frac{461}{8}
+\]
+
+\[
+    \oint_C \vec{F} \cdot d \vec{r}
+    = \oint_{C_1} \overrightarrow{F_1} \cdot d \vec{r_1}
+    + \oint_{C_2} \overrightarrow{F_2} \cdot d \vec{r_2}
+    + \oint_{C_3} \overrightarrow{F_3} \cdot d \vec{r_3}
+\]
+
+\[
+    \vec{F}=\left(3 y x^2+z^3\right) \hat{\imath}+y^2 \hat{\jmath}+4 y x^2 \hat{k}
+\]
+
+\[
+    r_1 = \left\langle0, 2t, 3-3t\right\rangle
+\]
+
+\[
+    \overrightarrow{F_1} =
+    \left\langle {(3-3t)}^3, 4t^2, 0\right\rangle
+\]
+
+\[
+    d \vec{r_1} = \left\langle0, 2, -3\right\rangle dt
+\]
+
+\[
+    r_2 = \left\langle4t, 0, 3-3t\right\rangle
+\]
+
+\[
+    \overrightarrow{F_2} =
+    \left\langle {(3-3t)}^3, 0, 0\right\rangle
+\]
+
+\[
+    d \vec{r_2} = \left\langle4, 0, -3\right\rangle dt
+\]
+
+\[
+    r_3 = \left\langle4-4t, 2t, 0\right\rangle
+\]
+
+\[
+    \overrightarrow{F_3} =
+    4\left\langle 24{(1-t)}^2, t^2, 32{(1-t)}^2\right\rangle
+\]
+
+\[
+    d \vec{r_3} = \left\langle-4, 2, 0\right\rangle dt
+\]
+
+\[
+    \oint_{C_1} \overrightarrow{F_1} \cdot d \vec{r_1}
+    = 8 \int_0^1 t^2 dt
+    = 8 {\left[ \frac{t^3}{3} \right]}_0^1
+    = \frac{8}{3}
+\]
+
+\[
+    \oint_{C_2} \overrightarrow{F_2} \cdot d \vec{r_2}
+    = - 108 \int_0^1 {(t-1)}^3 dt
+    = - 27 {\left[ {(t-1)}^4 \right]}_0^1
+    = - 27
+\]
+
+\[
+    \oint_{C_3} \overrightarrow{F_3} \cdot d \vec{r_3}
+    = 8 \int_0^1 t^2 - 48 {(t-1)}^2 dt
+    = 8 {\left[ \frac{t^3}{3} - 16 {(t-1)}^3 \right]}_0^1
+    = -\frac{376}{3}
+\]
+
+\[
+    \oint_C \vec{F} \cdot d \vec{r}
+    = \frac{8}{3} - 27 - \frac{376}{3}
+    = -\frac{449}{3}
+\]
 
 
 \newpage
@@ -70,7 +286,32 @@ around the ellipse \(\frac{x^2}{a^2}+\frac{y^2}{b^2}=1\)
 
 \subsection{Solution}
 
+\[
+    \oint_C P d x+Q d y=\iint_R\left(\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial y}\right) d x d y
+\]
 
+\[
+    P = y\left(4 x^2+y^2\right), \quad Q = x\left(2 x^2+3 y^2\right)
+\]
+
+\[
+    \frac{\partial Q}{\partial x} = 6x^2 + 3 y^2, \quad \frac{\partial P}{\partial y} = 4 x^2 + 3 y^2
+\]
+
+\[
+    \frac{\partial Q}{\partial x} - \frac{\partial P}{\partial y} = 2 x^2
+\]
+
+\[
+    \iint_R 2 x^2 d x d y
+    = 2 \int_{-b}^{b} \int_{-a \sqrt{1 - \frac{y^2}{b^2}}}^{a \sqrt{1 - \frac{y^2}{b^2}}} x^2 d x d y
+\]
+
+\[
+    = \frac{2}{3} \int_{-b}^{b} {\left[ x^3 \right]}_{-a \sqrt{1 - \frac{y^2}{b^2}}}^{a \sqrt{1 - \frac{y^2}{b^2}}} d y
+    = \frac{4}{3} a^3 \int_{-b}^{b} {\left(1 - \frac{y^2}{b^2}\right) }^\frac{3}{2} d y
+    = \frac{\pi}{2} a^3 b
+\]
 
 \newpage
 \bibliographystyle{plain}
